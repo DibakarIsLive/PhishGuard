@@ -27,7 +27,7 @@
 
 ```
 Traditional Security → Rules-based detection (limited)
-PhishGuard          → AI-powered intelligent detection ✨
+PhishGuard           → AI-powered intelligent detection ✨
                       + Explains every decision
                       + Learns from patterns
                       + Real-time protection
