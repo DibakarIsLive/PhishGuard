@@ -11,7 +11,7 @@
 [![scikit-learn](https://img.shields.io/badge/scikit--learn-1.3+-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
 [![XGBoost](https://img.shields.io/badge/XGBoost-2.0+-FF6B00?style=for-the-badge)](https://xgboost.readthedocs.io/)
 
-![PhishGuard Banner](./Images/Banner.png)
+![PhishGuard Banner](./Public//Banner.png)
 
 **Scan → Analyze → Detect → Explain → Protect**
 
