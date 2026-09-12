@@ -179,6 +179,7 @@ Total Time: ~130ms (Real-time!) ⚡
 | **Testing**             | 📋 Planned     | Model evaluation & API tests      |
 | **Documentation**       | 📋 Planned     | API docs + guides                 |
 
+<<<<<<< HEAD
 **Current Progress: ML training pipeline implemented** — dataset download, cleaning, feature engineering, stratified train/validation/test split, ensemble training, evaluation, and model persistence are implemented. 🚀
 
 ---
@@ -218,6 +219,9 @@ python scripts/train_model.py
 ```
 
 The full teacher/demo guide is in [`docs/TRAINING_GUIDE.md`](./docs/TRAINING_GUIDE.md).
+=======
+**Current Progress: `[░░░░░░░░░░░░░░░░░░░░]` 5%** — Just getting started! 🚀
+>>>>>>> upstream/main
 
 ---
 
@@ -230,10 +234,18 @@ The full teacher/demo guide is in [`docs/TRAINING_GUIDE.md`](./docs/TRAINING_GUI
 - [ ] GitHub repository with proper structure
 - [ ] Django backend scaffold
 - [ ] MongoDB integration
+<<<<<<< HEAD
 - [x] Configure public 21,000-row mirror/subset of the Tarun Tiwari Phishing Site URLs dataset
 - [x] Automatic dataset download without Kaggle authentication
 - [x] Data cleaning and duplicate/conflict handling
 - [x] Save cleaned dataset for inspection
+=======
+- [ ] Download phishing URL datasets
+  - PhishTank (phishing URLs)
+  - UNB dataset (legitimate URLs)
+  - Target: 10,000-11,000 URLs (balanced)
+- [ ] Data exploration notebook
+>>>>>>> upstream/main
 
 **Deliverable:** Structured project + cleaned dataset
 
@@ -243,8 +255,13 @@ The full teacher/demo guide is in [`docs/TRAINING_GUIDE.md`](./docs/TRAINING_GUI
 
 **Goal:** Extract meaningful features from URLs
 
+<<<<<<< HEAD
 - [x] Build URL feature extractor
 - [x] Extract 20 URL-structure features:
+=======
+- [ ] Build `URLFeatureExtractor` class
+- [ ] Extract 30-50 features:
+>>>>>>> upstream/main
   - 9 address bar features
   - 4 domain-based features
   - 4 HTML/content features
@@ -264,6 +281,7 @@ The full teacher/demo guide is in [`docs/TRAINING_GUIDE.md`](./docs/TRAINING_GUI
 
 **Base Classifiers (train individually):**
 
+<<<<<<< HEAD
 - [x] Random Forest
 - [x] Logistic Regression
 
@@ -278,6 +296,29 @@ The full teacher/demo guide is in [`docs/TRAINING_GUIDE.md`](./docs/TRAINING_GUI
 - [x] ROC-AUC
 - [x] Confusion matrix
 - [x] Validation and held-out test evaluation
+=======
+- [ ] Random Forest
+- [ ] XGBoost
+- [ ] Gradient Boosting
+- [ ] LightGBM
+- [ ] CatBoost
+- [ ] Support Vector Machine (SVM)
+- [ ] Logistic Regression
+- [ ] Decision Tree
+
+**Ensemble Approach:**
+
+- [ ] Stacking ensemble (meta-learner: Logistic Regression)
+- [ ] Voting classifier (hard voting)
+- [ ] Hyperparameter tuning (GridSearchCV)
+
+**Model Evaluation:**
+
+- [ ] Accuracy, Precision, Recall, F1-Score
+- [ ] ROC-AUC curves
+- [ ] Confusion matrix
+- [ ] Cross-validation (k-fold)
+>>>>>>> upstream/main
 
 **Target Accuracy:** >95%
 
