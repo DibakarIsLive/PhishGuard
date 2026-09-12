@@ -1,0 +1,84 @@
+{
+  "dataset": "KaushiGihan/phishing-site-url",
+  "dataset_reference": "https://www.kaggle.com/datasets/taruntiwarihp/phishing-site-urls",
+  "dataset_note": "Public 21,000-row mirror/subset of the referenced Kaggle dataset.",
+  "label_mapping": {
+    "0": "legitimate",
+    "1": "phishing"
+  },
+  "algorithm": "Soft Voting Ensemble: Random Forest + Logistic Regression",
+  "feature_count": 20,
+  "features": [
+    "digit_count",
+    "domain_length",
+    "dot_count",
+    "double_slash_in_path",
+    "encoded_character_count",
+    "has_at_symbol",
+    "has_ip_address",
+    "has_port",
+    "has_punycode",
+    "has_shortener",
+    "hyphen_count",
+    "path_length",
+    "query_parameter_count",
+    "special_char_count",
+    "subdomain_count",
+    "suspicious_keyword_count",
+    "suspicious_tld",
+    "url_entropy",
+    "url_length",
+    "uses_https"
+  ],
+  "cleaning": {
+    "rows_before_cleaning": 21000,
+    "empty_urls_removed": 0,
+    "unknown_or_missing_labels_removed": 0,
+    "conflicting_label_rows_removed": 0,
+    "duplicate_urls_removed": 303,
+    "rows_after_cleaning": 20697,
+    "legitimate_0": 10500,
+    "phishing_1": 10197
+  },
+  "split_sizes": {
+    "train": 14487,
+    "validation": 3105,
+    "test": 3105
+  },
+  "validation_metrics": {
+    "split": "validation",
+    "accuracy": 0.8261,
+    "precision": 0.8423,
+    "recall": 0.7961,
+    "f1": 0.8185,
+    "roc_auc": 0.9156,
+    "confusion_matrix": [
+      [
+        1347,
+        228
+      ],
+      [
+        312,
+        1218
+      ]
+    ]
+  },
+  "test_metrics": {
+    "split": "test",
+    "accuracy": 0.8303,
+    "precision": 0.8658,
+    "recall": 0.7758,
+    "f1": 0.8183,
+    "roc_auc": 0.9155,
+    "confusion_matrix": [
+      [
+        1391,
+        184
+      ],
+      [
+        343,
+        1187
+      ]
+    ]
+  }
+}
