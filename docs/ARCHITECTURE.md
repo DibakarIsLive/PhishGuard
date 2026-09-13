@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document describes the current Phase 1 implementation. It is intentionally narrower than a future production architecture: PhishGuard analyzes one URL string locally, returns an explainable baseline result, and optionally persists that result in MongoDB.
+This document describes the current Phase 1 implementation. It is intentionally narrower than a future production architecture: PhishGuard analyzes one URL string locally, returns an explainable baseline result, and persists that result in MongoDB when the configured database is reachable. Normal backend startup requires a successful bounded MongoDB reachability check.
 
 ## System boundary
 
@@ -25,13 +25,13 @@ This document describes the current Phase 1 implementation. It is intentionally 
 │ scan_service → feature_extractor → predictor                │
 │                              └──────────────┬────────────────┘
 │                                             ▼
-│                           optional MongoEngine persistence    │
+│ MongoEngine persistence                 │
 └──────────────────────────────────────────────────────────────┘
                                │
                 ┌──────────────┴──────────────┐
                 ▼                             ▼
 ┌───────────────────────────┐   ┌────────────────────────────┐
-│ Optional joblib artifact  │   │ Optional MongoDB database   │
+│ Optional joblib artifact  │   │ MongoDB database           │
 │ ml-models/phishguard_     │   │ collection: `scans`         │
 │ model.joblib              │   └────────────────────────────┘
 └───────────────────────────┘
@@ -114,9 +114,11 @@ The service returns:
 
 When MongoDB persistence succeeds, it also returns `id` and `created_at`.
 
-### 7. Optional persistence
+### 7. Startup gate and persistence
 
-The service attempts a bounded MongoDB connection. A successful scan is saved as a `Scan` document. Connection failure, save failure, or an unavailable MongoDB instance does not invalidate the analysis result. The history endpoint returns recent saved records when they are available.
+Before normal `runserver` startup, `manage.py` performs a bounded MongoDB reachability check against the configured server and refuses to start when the check fails. The explicit `--force` flag is a diagnostic bypass; the API Makefile exposes the equivalent `FORCE=1` setting.
+
+After startup, the service attempts bounded MongoDB persistence. A successful scan is saved as a `Scan` document. Connection failure or save failure—especially during a forced diagnostic session—does not invalidate the lexical analysis result, and the history endpoint returns recent saved records only when they are available.
 
 ## Feature contract
 
@@ -183,13 +185,13 @@ The MongoEngine `Scan` document uses the `scans` collection and newest-first ord
 | `explanations` | dictionary | Human-readable reasons |
 | `created_at` | datetime | UTC creation timestamp |
 
-MongoDB is optional for Phase 1. The Django relational database is deliberately configured as a dummy backend; history is handled through MongoEngine.
+MongoDB is required for normal backend startup in Phase 1. The Django relational database is deliberately configured as a dummy backend; history is handled through MongoEngine. Forced diagnostic startup can proceed without MongoDB, but persistence remains best-effort.
 
 ## Configuration modes
 
 - `DJANGO_ENV=development` selects local settings and allows the documented local hosts/origins.
 - `DJANGO_ENV=production` requires an explicit `SECRET_KEY`, `ALLOWED_HOSTS`, and `CORS_ALLOWED_ORIGINS`, and enables HTTPS-oriented settings.
-- `MONGODB_*` values configure optional history persistence and bounded timeouts.
+- `MONGODB_*` values configure the startup reachability check, MongoEngine history persistence, and bounded timeouts.
 - `VITE_API_BASE_URL` points the web client at the API.
 
 See [DEVELOPMENT_GUIDE.md](./DEVELOPMENT_GUIDE.md) for setup and [API_REFERENCE.md](./API_REFERENCE.md) for the HTTP contract.
@@ -197,11 +199,12 @@ See [DEVELOPMENT_GUIDE.md](./DEVELOPMENT_GUIDE.md) for setup and [API_REFERENCE.
 ## Design decisions
 
 1. **Network-free analysis:** A scan must not load the submitted destination as a side effect of analysis.
-2. **Optional persistence:** A missing database must not make a local URL analysis unusable.
-3. **Stable feature interface:** Feature names and order are explicit because optional model artifacts depend on them.
-4. **Small HTTP surface:** Phase 1 exposes only the routes required by the current frontend.
-5. **Explicit uncertainty:** Confidence is displayed as an application output, not presented as a validated probability.
-6. **JavaScript and JSX:** The web layer follows the repository convention and does not introduce TypeScript or TSX.
+2. **Explicit startup dependency:** Normal backend startup requires MongoDB; `--force` is reserved for intentional diagnostics.
+3. **Best-effort persistence:** After startup, a failed MongoDB save must not make the lexical analysis result unusable.
+4. **Stable feature interface:** Feature names and order are explicit because optional model artifacts depend on them.
+5. **Small HTTP surface:** Phase 1 exposes only the routes required by the current frontend.
+6. **Explicit uncertainty:** Confidence is displayed as an application output, not presented as a validated probability.
+7. **JavaScript and JSX:** The web layer follows the repository convention and does not introduce TypeScript or TSX.
 
 ## Related documents
 

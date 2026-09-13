@@ -19,7 +19,7 @@ The current repository provides:
 - Heuristic verdicts: `legitimate`, `suspicious`, and `phishing`.
 - Human-readable fallback reasons.
 - Optional compatible joblib model boundary.
-- Optional MongoEngine/MongoDB scan history.
+- MongoEngine/MongoDB scan history after the required normal-startup reachability check; forced diagnostics may run without persistence.
 - React/Vite JavaScript and JSX interface.
 - Focused API tests and local build/check commands.
 - Explicit limitations and safety documentation.
@@ -34,7 +34,7 @@ The current repository provides:
 - Define deterministic evaluation commands without claiming results before they are measured.
 - Add model-artifact metadata: feature order, training version, label mapping, and provenance.
 - Validate model artifacts before inference rather than relying only on runtime exceptions.
-- Add explicit tests for malformed URLs, whitespace normalization, and optional persistence behavior.
+- Add explicit tests for malformed URLs, whitespace normalization, and best-effort persistence behavior, including forced diagnostic sessions.
 - Clarify configuration variables that are currently reserved or only partially consumed.
 - Improve structured diagnostics for MongoDB connection and save failures.
 

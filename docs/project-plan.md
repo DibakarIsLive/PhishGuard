@@ -30,8 +30,10 @@ This boundary keeps the first implementation understandable and prevents unsuppo
 - [x] Keep the analysis path network-free: submitted websites are not visited or fetched.
 - [x] Support an optional compatible `api/ml-models/phishguard_model.joblib` artifact.
 - [x] Fall back to the heuristic predictor when the optional model is absent or cannot be used.
+- [x] Require a bounded MongoDB reachability check before normal backend startup.
+- [x] Provide an explicit `--force`/`FORCE=1` diagnostic bypass for startup without MongoDB.
 - [x] Persist scan records through MongoEngine when MongoDB is available.
-- [x] Continue analysis when MongoDB is unavailable.
+- [x] Keep forced-session analysis usable when a persistence operation fails.
 - [x] Provide a React/Vite frontend using JavaScript and JSX only.
 - [x] Provide local development, check, test, and build commands.
 
@@ -54,7 +56,7 @@ The following are not current deliverables:
 The Django application exposes:
 
 - `/` — service information and endpoint links.
-- `/api/health/` — API availability and the optional MongoDB boundary.
+- `/api/health/` — API availability and the MongoDB-required normal-startup boundary.
 - `/api/scan/` — analysis of one URL.
 - `/api/history/` — recent persisted scans.
 
@@ -113,7 +115,7 @@ The MongoEngine `Scan` document stores:
 - Explanation dictionary.
 - UTC creation timestamp.
 
-MongoDB is optional for analysis. If connection or save operations fail, the scan response remains available while the history endpoint returns no persisted results.
+Normal backend startup requires a bounded MongoDB reachability check. An explicit `--force`/`FORCE=1` diagnostic bypass can start the API without MongoDB; after startup, connection or save operations remain best-effort, so a failed save does not invalidate the lexical analysis response and history may be empty.
 
 ### 4.5 Web layer
 
@@ -183,22 +185,24 @@ Acceptance criteria:
 - Invalid or missing input is rejected by serializer or service validation.
 - History returns `{ "results": [...] }`.
 
-### Workstream D — Optional MongoDB persistence
+### Workstream D — MongoDB startup gate and persistence
 
-**Outcome:** Persistence that does not make local analysis fragile.
+**Outcome:** A clear MongoDB startup dependency with bounded, best-effort persistence after startup.
 
 Tasks:
 
 - Configure MongoEngine through environment variables.
 - Bound server-selection, connect, and socket timeouts.
 - Suppress repeated connection attempts for the configured retry interval after an unavailable database.
-- Keep persistence failures from changing the analysis contract.
+- Keep persistence failures from changing the analysis contract after a normal or forced startup.
+- Document the explicit `--force`/`FORCE=1` diagnostic bypass.
 
 Acceptance criteria:
 
-- The API can analyze a URL without MongoDB.
+- Normal `runserver` startup refuses to proceed when MongoDB is unreachable.
+- `python3 manage.py runserver --force` and `make dev FORCE=1` provide the documented diagnostic bypass.
 - When MongoDB is reachable, successful scans can appear in history.
-- The documentation clearly distinguishes analysis from persistence.
+- The documentation clearly distinguishes startup validation, local analysis, and persistence.
 
 ### Workstream E — React interface
 
@@ -217,6 +221,8 @@ Acceptance criteria:
 - `npm run build` succeeds in `web/`.
 - The default API base URL is documented.
 - A non-default API URL can be supplied with `VITE_API_BASE_URL`.
+- `make dev` opens the configured frontend URL automatically; `PORT` changes both the Vite port and opened URL.
+- Backend startup never opens a browser tab.
 
 ### Workstream F — Verification and documentation
 
@@ -248,10 +254,11 @@ git diff --check
 4. Run the API checks and focused tests.
 5. Start the API and verify `/api/health/`.
 6. Start the web client and submit representative URLs.
-7. Run with MongoDB stopped to verify analysis independence.
-8. Run with MongoDB available to verify history persistence.
-9. Add a compatible model artifact only after its feature contract is documented.
-10. Run the full verification commands before presenting the project.
+7. Verify that normal startup refuses to proceed with MongoDB stopped.
+8. Use `--force` only for an intentional diagnostic run and verify that lexical analysis can still return when persistence is unavailable.
+9. Run with MongoDB available to verify history persistence.
+10. Add a compatible model artifact only after its feature contract is documented.
+11. Run the full verification commands before presenting the project.
 
 ## 7. Completion checklist
 
@@ -262,7 +269,7 @@ git diff --check
 - [x] URL analysis is network-free.
 - [x] Feature extraction and heuristic prediction are implemented.
 - [x] Optional model loading is isolated from the default fallback.
-- [x] MongoDB persistence is optional and bounded.
+- [x] Normal backend startup requires MongoDB, with an explicit force bypass for diagnostics and bounded persistence behavior.
 - [x] The web client uses React JavaScript and JSX.
 - [x] Local commands and environment variables are documented.
 

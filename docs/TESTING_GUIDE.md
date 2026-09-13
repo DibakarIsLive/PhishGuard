@@ -6,7 +6,7 @@ PhishGuard is a Phase 1 academic baseline. Tests should verify deterministic beh
 
 ## Current automated tests
 
-The API test suite is located in `api/tests/` and runs with pytest.
+The API test suite is located in `api/tests/` and runs with pytest. Startup-gate tests also verify that normal `runserver` refuses an unavailable MongoDB and that `--force` removes only PhishGuard's guard argument before Django parses the command.
 
 ### Feature extractor tests
 
@@ -98,7 +98,7 @@ curl --fail --silent -X POST http://127.0.0.1:8000/api/scan/ \
   -d '{"url":"https://example.com/login"}' | python3 -m json.tool
 ```
 
-The scan request should return HTTP 200 for a valid URL. The history result may be empty when MongoDB is not available.
+The scan request should return HTTP 200 for a valid URL when the API was started normally with MongoDB reachable or intentionally with the diagnostic force bypass. The history result may be empty during a forced session when MongoDB persistence is unavailable.
 
 Test validation behavior:
 
@@ -110,16 +110,17 @@ curl --silent --show-error -i -X POST http://127.0.0.1:8000/api/scan/ \
 
 This should return a client-side validation error rather than a successful analysis.
 
-## Network-free scope check
+## MongoDB startup-gate and network-free scope checks
 
-The intended scan path uses URL parsing and local feature extraction only. A useful review procedure is:
+The scan computation uses URL parsing and local feature extraction only, while backend startup separately checks MongoDB reachability. A useful review procedure is:
 
 1. Stop MongoDB.
-2. Start the API.
-3. Submit a valid URL.
-4. Confirm that the scan returns without requiring MongoDB.
-5. Confirm that history returns an empty result.
-6. Review the code path to ensure no HTTP, DNS, TLS, or browser fetch was introduced.
+2. Start the API normally and confirm it exits with the MongoDB-required startup error.
+3. Start the API with `python3 manage.py runserver --force` or `make dev FORCE=1`.
+4. Submit a harmless, valid synthetic URL and confirm the lexical scan response can still return.
+5. Confirm that history may return an empty result during the forced session.
+6. Start MongoDB and verify that normal startup succeeds and successful scans can appear in history.
+7. Review the code path to ensure the analyzer adds no HTTP, DNS, TLS, or browser fetch for the submitted URL.
 
 Do not use a live malicious destination as a test target. A syntactically representative string is sufficient for the current analyzer.
 
@@ -133,7 +134,7 @@ When MongoDB is available:
 4. Call `/api/history/`.
 5. Confirm the saved URL, verdict, confidence, and timestamp appear.
 
-Persistence is best-effort. A failed save should not be treated as a failed lexical analysis response under the current design.
+Persistence is best-effort after startup. A failed save should not be treated as a failed lexical analysis response, particularly during an explicit forced diagnostic session.
 
 ## Frontend checks
 
@@ -143,8 +144,10 @@ The current frontend has no separate unit-test script. Use the build and manual 
 cd web
 npm install
 npm run build
-npm run dev -- --host 127.0.0.1 --port 5173
+make dev
 ```
+
+`make dev` passes the configured port to Vite and opens `http://localhost:5173/` automatically by default. Use `make dev PORT=5174` to test an override; the backend URL is never opened automatically.
 
 Review:
 
@@ -152,7 +155,7 @@ Review:
 - The interface states that the website is not visited.
 - Loading and error states are understandable.
 - The result card displays verdict, confidence, URL, and reasons.
-- History displays saved records or the MongoDB-unavailable message.
+- History displays saved records or the no-persisted-records/MongoDB-unavailable message during a forced diagnostic session.
 - The browser can call the API from the configured CORS origin.
 
 ## Test data guidance
@@ -173,7 +176,7 @@ When changing the API or analyzer:
 
 1. Add a focused test near the affected behavior.
 2. Prefer deterministic inputs and exact boundary assertions.
-3. Avoid tests that require MongoDB unless the persistence behavior itself is under test.
+3. Keep unit tests independent of a live MongoDB service; test the startup reachability gate and persistence behavior with bounded mocks or controlled integration fixtures.
 4. Keep external network calls out of unit tests.
 5. Update API examples and documentation when the response contract changes.
 6. Run the full verification sequence.

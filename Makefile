@@ -4,6 +4,7 @@
 
 API_PORT ?= 8000
 WEB_PORT ?= 5173
+FORCE ?= 0
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Terminal palette
@@ -67,8 +68,8 @@ dev: dev-tabs
 dev-tabs:
 	@if [ "$$(uname)" = "Darwin" ]; then \
 		printf '$(CYAN)✦ Opening API and web in separate Terminal windows...$(RESET)\n'; \
-		osascript -e 'tell application "Terminal" to do script "cd \"$(CURDIR)/api\" && make dev"' >/dev/null; \
-		osascript -e 'tell application "Terminal" to do script "cd \"$(CURDIR)/web\" && make dev"' >/dev/null; \
+		osascript -e 'tell application "Terminal" to do script "cd \"$(CURDIR)/api\" && make dev FORCE=$(FORCE)"' >/dev/null; \
+		osascript -e 'tell application "Terminal" to do script "cd \"$(CURDIR)/web\" && make dev PORT=$(WEB_PORT)"' >/dev/null; \
 		printf '$(GREEN)✔ Development cockpit launched.$(RESET)\n'; \
 	else \
 		printf '$(YELLOW)Tabs are macOS-specific; switching to one-terminal mode.$(RESET)\n'; \
@@ -77,13 +78,13 @@ dev-tabs:
 
 dev-single:
 	@printf '$(MAGENTA)✦ Starting API + web — press Ctrl-C to stop$(RESET)\n'
-	@trap 'kill 0' INT TERM; (cd api && $(MAKE) dev) & (cd web && $(MAKE) dev) & wait
+	@trap 'kill 0' INT TERM; (cd api && $(MAKE) dev FORCE=$(FORCE) PORT=$(API_PORT)) & (cd web && $(MAKE) dev PORT=$(WEB_PORT)) & wait
 
 api-only api:
-	@$(MAKE) -C api dev
+	@$(MAKE) -C api dev FORCE=$(FORCE) PORT=$(API_PORT)
 
 web-only ui:
-	@$(MAKE) -C web dev
+	@$(MAKE) -C web dev PORT=$(WEB_PORT)
 
 build:
 	@$(MAKE) -C web build
@@ -112,7 +113,7 @@ doctor:
 	@printf '  Python:    '; command -v python3 >/dev/null 2>&1 && printf '$(GREEN)✔ available$(RESET)\n' || printf '$(RED)✘ missing$(RESET)\n'
 	@printf '  Node:      '; command -v node >/dev/null 2>&1 && printf '$(GREEN)✔ %s$(RESET)\n' "$$(node --version)" || printf '$(RED)✘ missing$(RESET)\n'
 	@printf '  npm:       '; command -v npm >/dev/null 2>&1 && printf '$(GREEN)✔ %s$(RESET)\n' "$$(npm --version)" || printf '$(RED)✘ missing$(RESET)\n'
-	@printf '  MongoDB:   '; lsof -ti:27017 >/dev/null 2>&1 && printf '$(GREEN)✔ detected$(RESET)\n' || printf '$(YELLOW)○ optional / not detected$(RESET)\n'
+	@printf '  MongoDB:   '; lsof -ti:27017 >/dev/null 2>&1 && printf '$(GREEN)✔ detected$(RESET)\n' || printf '$(RED)✘ required / not detected$(RESET)\n'
 	@printf '  .env:      '; test -f api/.env && printf '$(GREEN)✔ present$(RESET)\n' || printf '$(YELLOW)○ missing — run make setup-env$(RESET)\n'
 
 health:

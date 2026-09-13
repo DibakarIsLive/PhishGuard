@@ -10,6 +10,10 @@ PIP := $(VENV_BIN)/pip
 MANAGE := $(PY) manage.py
 PORT ?= 8000
 HOST ?= 127.0.0.1
+FORCE ?= 0
+
+# `FORCE=1` adds the same explicit override accepted by manage.py.
+RUNSERVER_FORCE := $(if $(filter 1 true yes on,$(FORCE)),--force,)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Terminal palette
@@ -28,7 +32,7 @@ TITLE  := $(BOLD)$(BLUE)API$(RESET)
 
 help:
 	@printf '\n$(BLUE)╭────────────────────────────────────────────────────────────╮$(RESET)\n'
-	@printf '$(BLUE)│  🐍  $(TITLE)  ·  Django + MongoEngine control room         │$(RESET)\n'
+	@printf '$(BLUE)│  🐍  $(TITLE)  ·  Django + MongoEngine control room             │$(RESET)\n'
 	@printf '$(BLUE)╰────────────────────────────────────────────────────────────╯$(RESET)\n'
 	@printf '\n$(BOLD)Quick start$(RESET)\n'
 	@printf '  $(GREEN)make install$(RESET)       Create .venv and install dependencies\n'
@@ -71,8 +75,9 @@ runserver: dev
 
 dev: $(PY)
 	@printf '\n$(BOLD)$(BLUE)🚀 Django API$(RESET)  →  http://$(HOST):$(PORT)/api/\n'
+	@printf '$(DIM)MongoDB is required. Use FORCE=1 only for an explicit startup bypass.$(RESET)\n'
 	@printf '$(DIM)Press Ctrl-C to stop the server.$(RESET)\n\n'
-	@$(MANAGE) runserver $(HOST):$(PORT)
+	@$(MANAGE) runserver $(HOST):$(PORT) $(RUNSERVER_FORCE)
 
 check: $(PY)
 	@printf '$(MAGENTA)✦ Running Django checks...$(RESET)\n'
@@ -114,14 +119,16 @@ doctor:
 	@printf '  Python:  '; command -v $(PYTHON) >/dev/null 2>&1 && printf '$(GREEN)✔ %s$(RESET)\n' "$$($(PYTHON) --version 2>&1)" || printf '$(RED)✘ missing$(RESET)\n'
 	@printf '  Venv:    '; test -x $(PY) && printf '$(GREEN)✔ ready$(RESET)\n' || printf '$(YELLOW)○ missing — run make install$(RESET)\n'
 	@printf '  Django:  '; test -x $(PY) && $(PY) -c 'import django' 2>/dev/null && printf '$(GREEN)✔ installed$(RESET)\n' || printf '$(YELLOW)○ unavailable$(RESET)\n'
-	@printf '  MongoDB: '; lsof -ti:27017 >/dev/null 2>&1 && printf '$(GREEN)✔ detected$(RESET)\n' || printf '$(YELLOW)○ optional / not detected$(RESET)\n'
+	@printf '  MongoDB: '; lsof -ti:27017 >/dev/null 2>&1 && printf '$(GREEN)✔ detected$(RESET)\n' || printf '$(RED)✘ required / not detected$(RESET)\n'
+
 	@printf '  Model:   '; test -f ml-models/phishguard_model.joblib && printf '$(GREEN)✔ present$(RESET)\n' || printf '$(DIM)○ optional / heuristic fallback$(RESET)\n'
 
 status:
 	@printf '\n$(BOLD)$(BLUE)📡 API status$(RESET)\n'
 	@printf '  Virtual environment: '; test -x $(PY) && printf '$(GREEN)ready$(RESET)\n' || printf '$(YELLOW)missing$(RESET)\n'
 	@printf '  Django port $(PORT):   '; lsof -ti:$(PORT) >/dev/null 2>&1 && printf '$(GREEN)running$(RESET)\n' || printf '$(DIM)stopped$(RESET)\n'
-	@printf '  MongoDB port 27017:   '; lsof -ti:27017 >/dev/null 2>&1 && printf '$(GREEN)running$(RESET)\n' || printf '$(DIM)optional / stopped$(RESET)\n'
+	@printf '  MongoDB port 27017:   '; lsof -ti:27017 >/dev/null 2>&1 && printf '$(GREEN)running$(RESET)\n' || printf '$(RED)required / stopped$(RESET)\n'
+
 	@printf '  Model file:           '; test -f ml-models/phishguard_model.joblib && printf '$(GREEN)present$(RESET)\n' || printf '$(DIM)not present$(RESET)\n'
 
 clean-cache:

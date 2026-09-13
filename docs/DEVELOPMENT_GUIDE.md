@@ -4,7 +4,7 @@
 
 - Keep Phase 1 behavior aligned with the code and tests.
 - Treat the analyzer as a network-free academic tool.
-- Keep MongoDB optional for URL analysis.
+- Treat MongoDB as required for normal backend development startup; use the explicit force bypass only for diagnostics.
 - Use Python `snake_case` for Python modules, functions, and variables.
 - Keep the frontend in React, JavaScript, and JSX; do not introduce TypeScript or TSX.
 - Do not commit secrets, local environments, generated builds, logs, datasets, or model artifacts.
@@ -16,9 +16,9 @@
 - Node.js 18 or newer.
 - npm.
 - Git.
-- MongoDB only when saved scan history is required.
+- MongoDB running and reachable for normal backend development-server startup.
 
-MongoDB is not required to run the local URL analysis path.
+The URL scan computation remains network-free, but `manage.py runserver` performs a bounded MongoDB reachability check before starting. Use `python3 manage.py runserver --force` or `make dev FORCE=1` only when intentionally running diagnostics without MongoDB.
 
 ## Initial setup
 
@@ -47,7 +47,7 @@ make -C web doctor
 make dev
 ```
 
-The root target opens the API and web development servers in separate Terminal sessions.
+The root target opens the API and web development servers in separate Terminal sessions. The web target automatically opens its configured Vite URL in the default browser; the API target does not open a browser tab.
 
 ### One terminal or non-macOS
 
@@ -63,6 +63,8 @@ API:
 cd api
 make dev
 ```
+
+Normal API startup requires reachable MongoDB. To intentionally run a diagnostic session without MongoDB, use `python3 manage.py runserver --force` or `make dev FORCE=1`.
 
 Web:
 
@@ -95,8 +97,8 @@ cp api/.env.example api/.env
 | `ALLOWED_HOSTS` | `127.0.0.1,localhost` | Comma-separated allowed hostnames |
 | `CORS_ALLOWED_ORIGINS` | Local Vite origins | Comma-separated browser origins allowed to call the API |
 | `CORS_ALLOW_CREDENTIALS` | `False` | Credentialed cross-origin request setting |
-| `MONGODB_URI` | `mongodb://127.0.0.1:27017` | Optional MongoDB server URI |
-| `MONGODB_DATABASE` | `phishguard` | Optional history database |
+| `MONGODB_URI` | `mongodb://127.0.0.1:27017` | MongoDB server URI used by the startup check and persistence |
+| `MONGODB_DATABASE` | `phishguard` | MongoDB database used for scan history |
 | `API_ANON_RATE` | `60/min` | Anonymous API throttle |
 | `MAX_URL_LENGTH` | `2048` | Documented URL length setting |
 | `MAX_BATCH_SIZE` | `25` | Reserved for future batch work; no batch route exists |
@@ -130,14 +132,14 @@ When omitted, it uses:
 http://localhost:8000/api
 ```
 
-For a different local API address:
+For a different local API address, use the web Makefile; it still opens the configured frontend URL automatically:
 
 ```bash
 cd web
-VITE_API_BASE_URL=http://127.0.0.1:8000/api npm run dev -- --host 127.0.0.1 --port 5173
+VITE_API_BASE_URL=http://127.0.0.1:8000/api make dev
 ```
 
-The client calls `/scan/`, `/history/`, and `/health/` relative to that base URL.
+Set `PORT` to change the Vite port and the URL opened by `make dev`, for example `make dev PORT=5174`. The client calls `/scan/`, `/history/`, and `/health/` relative to the API base URL.
 
 ## Command reference
 
@@ -147,10 +149,10 @@ The client calls `/scan/`, `/history/`, and `/health/` relative to that base URL
 | --- | --- |
 | `make install` | Install API and web dependencies |
 | `make setup-env` | Create `api/.env` from the template when absent |
-| `make dev` | Start API and web in separate macOS Terminal sessions |
-| `make dev-single` | Start both services in one terminal |
-| `make api-only` | Start only the API |
-| `make web-only` | Start only the web client |
+| `make dev` | Start API and web in separate macOS Terminal sessions; the web target opens the frontend URL |
+| `make dev-single` | Start both services in one terminal; the web target opens the frontend URL |
+| `make api-only` | Start only the API; no browser tab is opened |
+| `make web-only` | Start only the web client and open its configured frontend URL |
 | `make doctor` | Inspect Python, Node, npm, MongoDB, and environment status |
 | `make health` | Call the web Makefile health target, which checks the API |
 | `make status` | Show API and web status |
@@ -169,6 +171,8 @@ Run from `api/`:
 make install
 make setup-env
 make dev
+# If MongoDB is intentionally unavailable for diagnostics:
+make dev FORCE=1
 make check
 make test
 make test-features
@@ -198,19 +202,19 @@ make bundle-size
 
 The web package currently has `dev`, `build`, and `preview` npm scripts. It does not currently include a frontend unit-test or lint script.
 
-## MongoDB history
+## MongoDB startup and history
 
-To enable saved history, start a local MongoDB instance and keep the development values in `api/.env`, or point `MONGODB_URI` and `MONGODB_DATABASE` to an authorized instance.
+Start a local MongoDB instance and keep the development values in `api/.env`, or point `MONGODB_URI` and `MONGODB_DATABASE` to an authorized instance. Normal `manage.py runserver` startup performs a bounded reachability check and exits with an error when MongoDB cannot be reached.
 
-The application:
+The explicit diagnostic bypasses are:
 
-1. Attempts a bounded MongoDB connection when a scan or history request needs it.
-2. Saves successful scans to the `scans` collection.
-3. Returns `id` and `created_at` when a scan is saved.
-4. Continues returning scan results when MongoDB is unavailable.
-5. Returns an empty history result when it cannot read MongoDB.
+```bash
+cd api
+python3 manage.py runserver --force
+make dev FORCE=1
+```
 
-MongoDB is not used for Django migrations; Django is configured with a dummy relational database backend.
+A forced session may still perform best-effort persistence: successful scans can be saved when MongoDB becomes reachable, while a failed save does not invalidate the lexical analysis result and history may be empty. MongoDB is not used for Django migrations; Django is configured with a dummy relational database backend.
 
 ## Optional model artifact
 
@@ -234,9 +238,9 @@ Do not commit a model artifact until its provenance, license, feature version, t
 4. Confirm the web origin is listed in `CORS_ALLOWED_ORIGINS`.
 5. Restart Vite after changing a `VITE_` environment variable.
 
-### MongoDB warnings appear
+### The backend refuses to start because MongoDB is unavailable
 
-This is expected when MongoDB is not running. URL analysis should still complete. Start MongoDB only when history persistence is needed, or inspect the bounded timeout and retry settings in `api/.env`.
+This is expected for normal startup. Start the MongoDB server configured by `MONGODB_URI`, verify the bounded timeout settings in `api/.env`, and retry. Use `python3 manage.py runserver --force` or `make dev FORCE=1` only for an intentional diagnostic session; the bypass is explicit and MongoDB persistence remains best-effort.
 
 ### Scan input is rejected
 

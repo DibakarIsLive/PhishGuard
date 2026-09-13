@@ -15,7 +15,7 @@ The web client calls the API namespace. Set `VITE_API_BASE_URL` when the API is 
 - The API currently allows unauthenticated access as a Phase 1 boundary.
 - Anonymous requests are throttled using `API_ANON_RATE`, which defaults to `60/min`.
 - A scan analyzes the submitted URL string locally; it does not visit the destination.
-- History is optional and depends on MongoDB persistence.
+- Normal backend startup requires a reachable MongoDB instance; scan history is persisted through MongoEngine when available.
 
 ## `GET /`
 
@@ -45,7 +45,7 @@ Example response:
 
 ## `GET /api/health/`
 
-Reports that the API is available and identifies MongoDB as an optional dependency.
+Reports that the API is available and identifies MongoDB as required for normal backend startup.
 
 ```bash
 curl http://127.0.0.1:8000/api/health/
@@ -57,11 +57,11 @@ Example response:
 {
   "status": "ok",
   "service": "phishguard-api",
-  "database": "optional MongoDB"
+  "database": "MongoDB required for normal startup"
 }
 ```
 
-A successful health response does not mean that MongoDB is connected or that a model artifact is present.
+A successful health response is served after the backend startup check has passed, unless the server was started with the explicit `--force` diagnostic bypass. It does not mean that a model artifact is present.
 
 ## `POST /api/scan/`
 
@@ -101,7 +101,7 @@ curl -X POST http://127.0.0.1:8000/api/scan/ \
   -d '{"url":"https://example.com/login"}'
 ```
 
-Example response without successful MongoDB persistence:
+Example response when the scan result is returned without a successful MongoDB save (for example, during an explicit forced diagnostic session):
 
 ```json
 {
@@ -230,7 +230,7 @@ Example with records:
 }
 ```
 
-If MongoDB is unavailable or no records have been saved:
+If no records have been saved, or a forced diagnostic session cannot read MongoDB:
 
 ```json
 {
@@ -238,7 +238,7 @@ If MongoDB is unavailable or no records have been saved:
 }
 ```
 
-The history response intentionally omits the stored feature and explanation dictionaries in the current Phase 1 endpoint.
+Normal startup requires MongoDB, while forced diagnostic sessions may return an empty history result when persistence is unavailable. The history response intentionally omits the stored feature and explanation dictionaries in the current Phase 1 endpoint.
 
 ## Feature contract
 

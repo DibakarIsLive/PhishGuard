@@ -24,7 +24,13 @@ class ApiRootView(APIView):
 
 class HealthView(APIView):
     def get(self, request):
-        return Response({"status": "ok", "service": "phishguard-api", "database": "optional MongoDB"})
+        return Response(
+            {
+                "status": "ok",
+                "service": "phishguard-api",
+                "database": "MongoDB required for normal startup",
+            }
+        )
 
 
 class ScanView(APIView):

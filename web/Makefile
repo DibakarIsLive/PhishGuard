@@ -54,7 +54,7 @@ dev:
 	@if [ ! -d node_modules ]; then printf '$(RED)✘ node_modules is missing; run make install first.$(RESET)\n'; exit 1; fi
 	@printf '\n$(BOLD)$(MAGENTA)⚛ Vite development server$(RESET)  →  http://localhost:$(PORT)/\n'
 	@printf '$(DIM)API expected at $(API_URL)/api/$(RESET)\n\n'
-	@$(NPM) run dev -- --host 127.0.0.1 --port $(PORT)
+	@$(NPM) run dev -- --host 127.0.0.1 --port $(PORT) --open http://localhost:$(PORT)/
 
 build:
 	@printf '$(MAGENTA)✦ Building the React application...$(RESET)\n'

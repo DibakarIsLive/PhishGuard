@@ -6,7 +6,7 @@
 
 ## Abstract
 
-Phishing remains a practical cybersecurity problem because malicious links can imitate trusted services while using small structural changes to redirect or deceive users. PhishGuard is an academic and research-oriented full-stack application that studies this problem at the URL level. Its current Phase 1 implementation accepts one URL, extracts a stable set of 20 lexical and hostname features locally, produces an interpretable baseline verdict, and optionally records the result in MongoDB. A Django REST API exposes the analysis service and a React interface provides the user workflow.
+Phishing remains a practical cybersecurity problem because malicious links can imitate trusted services while using small structural changes to redirect or deceive users. PhishGuard is an academic and research-oriented full-stack application that studies this problem at the URL level. Its current Phase 1 implementation accepts one URL, extracts a stable set of 20 lexical and hostname features locally, produces an interpretable baseline verdict, and records the result in MongoDB when the configured database is reachable. Normal backend startup validates MongoDB reachability first. A Django REST API exposes the analysis service and a React interface provides the user workflow.
 
 The application deliberately does not visit or crawl submitted websites. It therefore demonstrates a safe and inspectable baseline rather than complete website classification. The current predictor is heuristic by default, with an optional compatible `joblib` model artifact boundary. No accuracy or production-security claim is made without a reproducible dataset, training process, evaluation report, and operational evidence.
 
@@ -16,7 +16,7 @@ The application deliberately does not visit or crawl submitted websites. It ther
 
 Phishing attacks commonly depend on social engineering and deceptive destinations. A link may use a misleading hostname, an IP address, unusual punctuation, encoded characters, an abused top-level domain, or account-related wording. These properties can be studied without loading the target website.
 
-PhishGuard provides a small system in which those signals are visible from input to output. The project is intended for academic exploration of feature engineering, API design, frontend integration, optional persistence, and responsible documentation. It should be read as a baseline research application, not as a replacement for browser security controls or professional incident analysis.
+PhishGuard provides a small system in which those signals are visible from input to output. The project is intended for academic exploration of feature engineering, API design, frontend integration, best-effort persistence, and responsible documentation. It should be read as a baseline research application, not as a replacement for browser security controls or professional incident analysis.
 
 ## 2. Problem definition
 
@@ -40,10 +40,11 @@ To implement and document a reproducible baseline workflow for URL-level phishin
 4. Produce one of three baseline verdicts: `legitimate`, `suspicious`, or `phishing`.
 5. Return human-readable explanation reasons alongside the verdict.
 6. Keep the analysis path independent of live website access.
-7. Provide optional MongoDB history through MongoEngine.
-8. Provide a React/Vite frontend using JavaScript and JSX.
-9. Add focused tests and local commands for verification.
-10. Document limitations and future research without presenting them as implemented capabilities.
+7. Require MongoDB for normal backend startup and provide an explicit force bypass for diagnostics.
+8. Provide MongoDB history through MongoEngine with best-effort persistence after startup.
+9. Provide a React/Vite frontend using JavaScript and JSX, with automatic browser opening for the configured Vite URL during `make dev`.
+10. Add focused tests and local commands for verification.
+11. Document limitations and future research without presenting them as implemented capabilities.
 
 ## 4. Scope
 
@@ -56,7 +57,7 @@ To implement and document a reproducible baseline workflow for URL-level phishin
 - Transparent heuristic prediction.
 - Optional loading of a compatible `api/ml-models/phishguard_model.joblib` artifact.
 - JSON endpoints for root information, health, scanning, and history.
-- Optional MongoDB persistence for saved scans.
+- MongoDB-backed persistence for saved scans, with a required normal-startup reachability check and an explicit diagnostic bypass.
 - React components for input, results, errors, and recent history.
 - Development and production-oriented Django settings separation.
 - Documentation, tests, Python compilation, and frontend build verification.
@@ -107,7 +108,7 @@ The fallback reasons are returned in plain language so that a reviewer can conne
 
 ### 5.4 Persistence
 
-After analysis, the service can save a `Scan` document through MongoEngine. The document contains the URL, verdict, confidence, feature dictionary, explanation dictionary, and UTC creation time. MongoDB is optional. If the database is unavailable, the analysis response remains useful and the history collection may be empty.
+After startup validation, the service can save a `Scan` document through MongoEngine. The document contains the URL, verdict, confidence, feature dictionary, explanation dictionary, and UTC creation time. Normal startup requires reachable MongoDB; `--force` (or `FORCE=1` through the API Makefile) is an explicit diagnostic bypass. In a forced session, a database failure leaves the lexical analysis response useful and the history collection may be empty.
 
 ### 5.5 User interface
 
@@ -132,7 +133,7 @@ Scan service (`api/url_analysis/scan_service.py`)
   └── optional MongoEngine persistence
 ```
 
-The architecture has a deliberate boundary between analysis and persistence. URL inspection is local and does not depend on MongoDB. Persistence is best-effort and separately observable through the history endpoint.
+The architecture has a deliberate boundary between startup validation, analysis, and persistence. URL inspection is local and does not fetch the submitted website. Normal backend startup requires MongoDB; an explicit `--force` bypass supports diagnostics, while persistence after startup remains best-effort and is observable through the history endpoint.
 
 ## 7. Expected outputs
 
@@ -147,7 +148,7 @@ The project gives students practical experience with:
 - Translating a security problem into measurable input signals.
 - Designing a stable feature contract.
 - Separating HTTP transport from domain logic.
-- Handling optional persistence without hiding failures.
+- Handling a required startup dependency and best-effort persistence without hiding failures.
 - Connecting a React client to a Django REST API.
 - Writing tests for feature order and prediction boundaries.
 - Communicating system limitations responsibly.
@@ -177,6 +178,6 @@ Each direction is a separate research increment. It becomes part of the system d
 
 ## 11. Conclusion
 
-PhishGuard establishes a focused Phase 1 foundation for academic phishing URL analysis. It combines deterministic local feature extraction, an inspectable predictor, a small REST contract, optional MongoDB history, and a JavaScript/JSX frontend. Its strongest design property is the explicit safety and scope boundary: it analyzes the submitted URL string without visiting the destination and presents its result as an informational signal.
+PhishGuard establishes a focused Phase 1 foundation for academic phishing URL analysis. It combines deterministic local feature extraction, an inspectable predictor, a small REST contract, MongoDB-backed history with an explicit diagnostic startup bypass, and a JavaScript/JSX frontend. Its strongest design property is the explicit safety and scope boundary: it analyzes the submitted URL string without visiting the destination and presents its result as an informational signal.
 
 This foundation can support measured future research while remaining honest about what the current implementation does—and does not—demonstrate.

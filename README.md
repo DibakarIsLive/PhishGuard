@@ -16,7 +16,7 @@
 
 ## Overview
 
-PhishGuard is an academic and research-oriented full-stack application for inspecting suspicious URLs. The current Phase 1 implementation combines a network-free URL feature extractor, a transparent heuristic predictor, an optional `joblib` model hook, a Django REST API, optional MongoDB history, and a React interface written with JavaScript and JSX.
+PhishGuard is an academic and research-oriented full-stack application for inspecting suspicious URLs. The current Phase 1 implementation combines a network-free URL feature extractor, a transparent heuristic predictor, an optional `joblib` model hook, a Django REST API, MongoDB-backed history, and a React interface written with JavaScript and JSX.
 
 The analyzer does **not** visit, crawl, resolve, or fetch submitted websites. Its output is an informational signal for study and review. It is not a guarantee that a website is safe, and it must not replace browser warnings, endpoint protection, email security controls, or professional security analysis.
 
@@ -30,8 +30,8 @@ The analyzer does **not** visit, crawl, resolve, or fetch submitted websites. It
 - Uses the heuristic predictor by default.
 - Loads `api/ml-models/phishguard_model.joblib` when a compatible optional model artifact is present; a load or prediction failure falls back to the heuristic path.
 - Accepts one URL per scan request, with a 2,048-character serializer limit.
-- Stores scan history in MongoDB when MongoDB is configured and persistence succeeds.
-- Continues URL analysis when MongoDB is unavailable; history then returns an empty result set.
+- Stores scan history in MongoDB when the configured database is reachable and persistence succeeds.
+- Requires a reachable MongoDB server for normal Django development-server startup; use the explicit `--force` bypass only for diagnostics.
 - Provides a focused React/Vite interface for scanning, viewing explanations, and viewing saved history.
 
 ## Architecture
@@ -55,12 +55,12 @@ The analyzer does **not** visit, crawl, resolve, or fetch submitted websites. It
                ├───────────────┐
                ▼               ▼
 ┌────────────────────┐  ┌─────────────────────┐
-│ Optional joblib    │  │ Optional MongoDB    │
+│ Optional joblib    │  │ Required MongoDB    │
 │ model artifact     │  │ scan history        │
 └────────────────────┘  └─────────────────────┘
 ```
 
-The analysis path is intentionally independent of webpage content and MongoDB availability. The service extracts features, produces a verdict and reasons, then attempts optional persistence.
+The scan computation is independent of webpage content and does not contact submitted destinations. Normal backend development startup still performs a bounded MongoDB reachability check; once started, the service attempts best-effort persistence.
 
 ## Quick start
 
@@ -69,7 +69,7 @@ The analysis path is intentionally independent of webpage content and MongoDB av
 - Python 3.9 or newer
 - Node.js 18 or newer
 - npm
-- MongoDB for persistent history only
+- MongoDB running and reachable for normal backend development startup
 
 ### Recommended: root Makefile
 
@@ -97,7 +97,7 @@ make ci            # check, test, and build
 make dev-single    # run API and web from one terminal
 ```
 
-`make dev` uses macOS Terminal tabs/windows. On other platforms, use `make dev-single` or start the API and web manually.
+`make dev` uses macOS Terminal tabs/windows. The web development server automatically opens `http://localhost:5173/` in the default browser. On other platforms, use `make dev-single` or start the API and web manually; the web `make dev` target still opens its configured Vite URL.
 
 ### Manual setup
 
@@ -110,6 +110,8 @@ source .venv/bin/activate                 # Windows: .venv/Scripts/activate
 pip install -r requirements.txt
 cp .env.example .env
 python manage.py runserver 127.0.0.1:8000
+# If MongoDB is intentionally unavailable for diagnostics:
+python manage.py runserver 127.0.0.1:8000 --force
 ```
 
 Web, in a second terminal:
@@ -117,7 +119,7 @@ Web, in a second terminal:
 ```bash
 cd web
 npm install
-npm run dev -- --host 127.0.0.1 --port 5173
+make dev  # starts Vite and opens http://localhost:5173/ automatically
 ```
 
 The web client defaults to `http://localhost:8000/api`. Set `VITE_API_BASE_URL` when the API is hosted elsewhere, for example:
@@ -128,22 +130,22 @@ VITE_API_BASE_URL=http://127.0.0.1:8000/api npm run dev
 
 ### MongoDB
 
-MongoDB is optional for analysis and required only for saved history. The development defaults use:
+MongoDB is required for normal backend development startup. The development defaults use:
 
 - URI: `mongodb://127.0.0.1:27017`
 - Database: `phishguard`
 - Collection: `scans`
 
-Override `MONGODB_URI` and `MONGODB_DATABASE` in `api/.env` when needed. Connection and socket timeouts are bounded so an unavailable local MongoDB instance does not block the analysis path indefinitely.
+Override `MONGODB_URI` and `MONGODB_DATABASE` in `api/.env` when needed. The startup reachability check and persistence connection use bounded timeouts. If MongoDB is intentionally unavailable, pass `--force` to `manage.py runserver` or use `make dev FORCE=1` for an explicit diagnostic bypass; persistence may then be unavailable.
 
 ## API endpoints
 
-| Method | Endpoint        | Purpose                                                    |
-| ------ | --------------- | ---------------------------------------------------------- |
-| `GET`  | `/`             | Return service information and endpoint links              |
-| `GET`  | `/api/health/`  | Report API availability and the optional database boundary |
-| `POST` | `/api/scan/`    | Analyze one URL                                            |
-| `GET`  | `/api/history/` | Return recent persisted scans                              |
+| Method | Endpoint        | Purpose                                                     |
+| ------ | --------------- | ----------------------------------------------------------- |
+| `GET`  | `/`             | Return service information and endpoint links               |
+| `GET`  | `/api/health/`  | Report API availability and the MongoDB startup requirement |
+| `POST` | `/api/scan/`    | Analyze one URL                                             |
+| `GET`  | `/api/history/` | Return recent persisted scans                               |
 
 Example scan request:
 
@@ -157,6 +159,7 @@ See [docs/API_REFERENCE.md](./docs/API_REFERENCE.md) for request validation, res
 
 ## Documentation map
 
+- [Project progress dashboard](./Progress.md) — one-glance status, remaining Phase 1.1 jobs, ownership placeholders, and Final Phase 2 goals.
 - [Project plan](./docs/project-plan.md) — verified Phase 1 workstreams, completion criteria, and future phases.
 - [Project synopsis](./docs/project-synopsis.md) — academic description of the problem, method, scope, and limitations.
 - [Architecture](./docs/ARCHITECTURE.md) — module responsibilities and end-to-end data flow.

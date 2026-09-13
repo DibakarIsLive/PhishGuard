@@ -2,7 +2,7 @@
 
 from .base import *  # noqa: F403,F401
 
-DEBUG = True
+DEBUG = False
 
 # Development can accept local hostnames even when .env has not been created.
 ALLOWED_HOSTS = sorted(  # noqa: F405
@@ -26,5 +26,6 @@ CORS_ALLOWED_ORIGINS = sorted(  # noqa: F405
 # Development logs are useful in the terminal and in api/logs/django.log.
 LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")  # noqa: F405
 
-# The URL analyzer is network-free, so no external service is required to run
-# the API locally. MongoDB is used only when history persistence is available.
+# The URL analyzer is network-free, but MongoDB is a required local service for
+# normal API startup. manage.py provides an explicit --force bypass for local
+# diagnostics when persistence is intentionally unavailable.
