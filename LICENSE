@@ -1,21 +1,107 @@
-MIT License
+PhishGuard Source-Available Academic and Evaluation License
 
 Copyright (c) 2026 Dibakar Is Live
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+## 1. Definitions
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+"Software" means the PhishGuard source code, documentation, configuration, and
+other materials distributed with this license by the copyright holder.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+"You" means the individual or legal entity exercising rights under this license.
+
+"Commercial Use" means use primarily intended for or directed toward commercial
+advantage, monetary compensation, paid services, internal revenue-generating
+operations, or production operation for a commercial organization.
+
+## 2. Grant of rights
+
+Subject to the conditions below, the copyright holder grants You a limited, non-exclusive, non-transferable, non-sublicensable, royalty-free license to:
+
+- view and study the Software;
+- run the Software for personal learning, academic instruction, non-commercial
+  research, and evaluation;
+- reproduce the Software in unmodified or modified form for those permitted
+  purposes; and
+- create and share modifications for those permitted purposes, provided that the
+  notice and source-availability requirements in this license are preserved.
+
+This license does not grant rights to use the Software for Commercial Use.
+
+## 3. Conditions
+
+For every permitted copy or substantial portion of the Software, You must:
+
+1. retain this license and the copyright notice;
+2. clearly mark modified files and state that changes were made;
+3. preserve the PhishGuard name and attribution in source distributions unless
+   the copyright holder provides written permission for a different attribution;
+4. make the corresponding source code for modifications available to recipients
+   under this same license; and
+5. avoid presenting the Software, modified or unmodified, as a production-grade
+   security product, a guarantee of website safety, or a substitute for qualified
+   cybersecurity review without separate written permission.
+
+You may not:
+
+- sell, license, sublicense, host for payment, or otherwise commercially exploit
+  the Software or a derivative work;
+- remove copyright, license, attribution, or safety notices;
+- use the Software to misrepresent a website's safety or to conceal malicious
+  activity; or
+- use the PhishGuard name or branding to imply endorsement of a derivative work
+  without written permission.
+
+## 4. Third-party materials
+
+The Software may reference or depend on third-party libraries, datasets, model
+artifacts, fonts, icons, or services. Those materials are not relicensed by this
+license. You are responsible for complying with their separate terms, notices,
+and privacy requirements.
+
+## 5. Ownership
+
+The Software remains the property of the copyright holder. No ownership,
+trademark, patent, or other intellectual-property right is transferred by this
+license. Rights not expressly granted are reserved.
+
+## 6. Disclaimer
+
+THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE, TITLE, NON-INFRINGEMENT, ACCURACY, OR SECURITY. THE
+SOFTWARE DOES NOT GUARANTEE THAT ANY WEBSITE OR URL IS SAFE, LEGITIMATE, OR FREE
+FROM MALICIOUS CONTENT. YOU ARE RESPONSIBLE FOR VALIDATING OUTPUTS AND FOR ALL
+USE OF THE SOFTWARE.
+
+## 7. Limitation of liability
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE COPYRIGHT HOLDER SHALL
+NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY,
+OR PUNITIVE DAMAGES, OR FOR ANY LOSS OF DATA, PROFITS, REVENUE, BUSINESS,
+GOODWILL, OR SECURITY, ARISING FROM OR RELATED TO THE SOFTWARE OR THIS LICENSE,
+UNDER ANY THEORY OF LIABILITY, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.
+
+## 8. Termination
+
+This license terminates automatically if You materially breach its terms. Upon
+termination, You must stop using and distributing the Software and delete copies
+under Your control, except where retention is required by law. Rights that by
+their nature should survive termination survive, including ownership, disclaimer,
+limitation of liability, and third-party-material provisions.
+
+## 9. No obligation
+
+The copyright holder is not required to provide support, updates, warranties,
+security fixes, model artifacts, datasets, or continued availability.
+
+## 10. Governing law
+
+This license is governed by the laws applicable in the jurisdiction of the
+copyright holder, without regard to conflict-of-law rules. If any provision is
+held unenforceable, the remaining provisions remain in effect.
+
+## 11. Contact
+
+For commercial licensing, branding permission, or other written permissions,
+contact the copyright holder through the project maintainer's official channel.

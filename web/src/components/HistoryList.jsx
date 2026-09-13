@@ -1,0 +1,3 @@
+export default function HistoryList({ items }) {
+  return <section className="history"><div className="section-heading"><div><p className="eyebrow">Recent activity</p><h2>Scan history</h2></div><span>{items.length} saved</span></div>{items.length === 0 ? <p className="muted">History appears after MongoDB is connected and a scan is saved.</p> : <div className="history-list">{items.map((item) => <div className="history-item" key={item.id}><div><strong>{item.url}</strong><small>{new Date(item.created_at).toLocaleString()}</small></div><b className={item.verdict}>{item.verdict}</b></div>)}</div>}</section>;
+}

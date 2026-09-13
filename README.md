@@ -1,714 +1,238 @@
 <div align="center">
 
-# 🛡️ PhishGuard 🛡️
+# 🛡️ PhishGuard
 
-### An Explainable Machine Learning Framework for Real-Time Phishing URL Detection
+### A Phase 1 explainable phishing URL analysis application
 
-[![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![Django](https://img.shields.io/badge/Django-4.2+-092E20?style=for-the-badge&logo=django&logoColor=white)](https://www.djangoproject.com/)
-[![React](https://img.shields.io/badge/React-18+-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-8.0+-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
-[![scikit-learn](https://img.shields.io/badge/scikit--learn-1.3+-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
-[![XGBoost](https://img.shields.io/badge/XGBoost-2.0+-FF6B00?style=for-the-badge)](https://xgboost.readthedocs.io/)
+[![Django](https://img.shields.io/badge/Django-4.2-092E20?style=for-the-badge&logo=django&logoColor=white)](https://www.djangoproject.com/)
+[![React](https://img.shields.io/badge/React-JSX-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![MongoEngine](https://img.shields.io/badge/MongoDB-MongoEngine-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://docs.mongoengine.org/)
 
-![PhishGuard Banner](./Public//Banner.png)
+![PhishGuard Banner](./public/phishguard-banner.png)
 
-**Scan → Analyze → Detect → Explain → Protect**
-
-[Quick Start](#-quick-start) • [What is Phishing?](#-what-is-phishing) • [How It Works](#-how-it-works) • [Roadmap](#-project-roadmap) • [Architecture](#-system-architecture)
+**Inspect the URL → explain the signals → optionally record the result**
 
 </div>
 
----
+## Overview
 
-## 🎯 Mission
+PhishGuard is an academic and research-oriented full-stack application for inspecting suspicious URLs. The current Phase 1 implementation combines a network-free URL feature extractor, a transparent heuristic predictor, an optional `joblib` model hook, a Django REST API, optional MongoDB history, and a React interface written with JavaScript and JSX.
 
-**PhishGuard** is an intelligent cybersecurity solution that detects malicious URLs in **real-time** using advanced Machine Learning. We combine **feature engineering** and **ensemble learning** to identify phishing attacks with **explainable predictions** — so you know _exactly why_ a URL is dangerous.
+The analyzer does **not** visit, crawl, resolve, or fetch submitted websites. Its output is an informational signal for study and review. It is not a guarantee that a website is safe, and it must not replace browser warnings, endpoint protection, email security controls, or professional security analysis.
 
-```
-Traditional Security → Rules-based detection (limited)
-PhishGuard           → AI-powered intelligent detection ✨
-                      + Explains every decision
-                      + Learns from patterns
-                      + Real-time protection
-```
+> **Scope note:** Phase 1 deliberately favors a small, inspectable baseline over unsupported accuracy, latency, or production-readiness claims. The repository does not currently include a reproducible training pipeline or a bundled trained model.
 
-**Protection Layer You Can Trust.** 🔒
+## Current capabilities
 
----
+- Extracts 20 deterministic URL and hostname features without making outbound requests.
+- Reports one of three verdicts: `legitimate`, `suspicious`, or `phishing`.
+- Returns human-readable reasons for the heuristic result.
+- Uses the heuristic predictor by default.
+- Loads `api/ml-models/phishguard_model.joblib` when a compatible optional model artifact is present; a load or prediction failure falls back to the heuristic path.
+- Accepts one URL per scan request, with a 2,048-character serializer limit.
+- Stores scan history in MongoDB when MongoDB is configured and persistence succeeds.
+- Continues URL analysis when MongoDB is unavailable; history then returns an empty result set.
+- Provides a focused React/Vite interface for scanning, viewing explanations, and viewing saved history.
 
-## 🚨 What is Phishing?
+## Architecture
 
-**Phishing** is when attackers create fake websites that look legitimate to steal your data.
-
-### Real-World Examples
-
-| Attacker Creates                   | You Think | Actually Goes To | Result                |
-| ---------------------------------- | --------- | ---------------- | --------------------- |
-| `https://goog1e.com/login`         | Google    | Fake site        | 💀 Password stolen    |
-| `https://paypa1.com/verify`        | PayPal    | Phishing site    | 💀 Credit card stolen |
-| `https://amazon-secure.ru/account` | Amazon    | Russian phishing | 💀 Account hacked     |
-
-### The Problem
-
-- **20% of people** click phishing links
-- **3% of those** get infected
-- **$5.9 billion/year** in losses globally
-- Email filters miss **30%** of phishing attempts
-
-### The Solution
-
-**PhishGuard** catches what humans and simple filters miss. ✨
-
----
-
-## 💡 How PhishGuard Works
-
-### The Three-Step Process
-
-```
-Step 1: EXTRACT           Step 2: PREDICT           Step 3: EXPLAIN
-────────────────        ──────────────────        ──────────────────
-Input URL                Multiple ML Models        Why is it phishing?
-    ↓                          ↓                         ↓
-Extract 30-50          Random Forest             Feature importance:
-URL features:          + XGBoost                 • Suspicious domain (45%)
-• Length               + SVM                     • IP-based URL (30%)
-• Special chars        + LightGBM                • URL length anomaly (25%)
-• Domain age           + 5 more...
-• SSL cert             = Ensemble (97%+ acc)
-• ... and 25+ more
+```text
+┌──────────────────────────────┐
+│ React + Vite + JSX (`web/`)  │
+│ Scan form · result · history │
+└──────────────┬───────────────┘
+               │ JSON over HTTP
+               ▼
+┌──────────────────────────────┐
+│ Django REST API (`api/`)     │
+│ serializers · views · routes │
+└──────────────┬───────────────┘
+               ▼
+┌──────────────────────────────┐
+│ URL analysis service         │
+│ features → predictor → notes │
+└──────────────┬───────────────┘
+               ├───────────────┐
+               ▼               ▼
+┌────────────────────┐  ┌─────────────────────┐
+│ Optional joblib    │  │ Optional MongoDB    │
+│ model artifact     │  │ scan history        │
+└────────────────────┘  └─────────────────────┘
 ```
 
-### Feature Categories Extracted
+The analysis path is intentionally independent of webpage content and MongoDB availability. The service extracts features, produces a verdict and reasons, then attempts optional persistence.
 
-| Category          | Features           | Examples                                         |
-| ----------------- | ------------------ | ------------------------------------------------ |
-| **URL Structure** | 9 features         | Length, special chars, dot count, @ symbol       |
-| **Domain-based**  | 4 features         | Domain length, TLD, subdomain count, IP presence |
-| **Content-based** | 4 features         | Page title, links count, form presence, redirect |
-| **Advanced**      | 13+ features       | SSL certificate, domain age, WHOIS data, entropy |
-| **Total**         | **30-50 features** | Rich dataset for ML                              |
-
----
-
-## 🏗️ System Architecture
-
-### High-Level Overview
-
-```
-┌─────────────────────────────────────────────────────┐
-│              PhishGuard Architecture                │
-└─────────────────────────────────────────────────────┘
-                      │
-        ┌─────────────┴─────────────┐
-        ▼                           ▼
-   Frontend (React)          Backend (Django)
-   ├─ URL Input UI           ├─ REST API (8 endpoints)
-   ├─ Real-time checking     ├─ Feature Extractor
-   ├─ Results display        ├─ ML Pipeline
-   └─ Prediction history     ├─ SHAP Explainer
-                             └─ Model Manager
-                                    │
-                    ┌───────────────┼───────────────┐
-                    ▼               ▼               ▼
-             MongoDB Database  ML Models       Explanations
-             ├─ URLs checked   ├─ RF (trees)  ├─ SHAP values
-             ├─ Predictions    ├─ XGBoost     ├─ Feature contrib.
-             └─ Features       ├─ SVM         └─ Confidence
-                               ├─ LightGBM
-                               └─ 5 more...
-```
-
-### Prediction Pipeline
-
-```
-User URL Input
-    ↓
-┌─────────────────────────────────┐
-│   1. Feature Extraction (10ms)  │  Extract 30-50 URL characteristics
-└─────────────────────────────────┘
-    ↓
-┌─────────────────────────────────┐
-│   2. Data Preprocessing (5ms)   │  Normalize, scale, handle missing
-└─────────────────────────────────┘
-    ↓
-┌─────────────────────────────────┐
-│   3. Ensemble Prediction (90ms) │  Run through multiple models
-│                                 │  • Random Forest
-│   ┌─ Model 1: RF → 0.92         │  • XGBoost
-│   ├─ Model 2: XGB → 0.95        │  • SVM
-│   ├─ Model 3: SVM → 0.88        │  • LightGBM
-│   ├─ Model 4: LGB → 0.94        │  • + 5 more
-│   └─ ...Voting Classifier       │
-│       Final → 0.93              │
-└─────────────────────────────────┘
-    ↓
-┌─────────────────────────────────┐
-│   4. Explainability (20ms)      │  Why did we predict phishing?
-│                                 │  • Feature importance (SHAP)
-│   Top Contributing Features:    │  • Contribution breakdown
-│   1. Suspicious domain (45%)    │  • Decision reasoning
-│   2. IP-based URL (30%)         │
-│   3. URL length (25%)           │
-└─────────────────────────────────┘
-    ↓
-┌─────────────────────────────────┐
-│   5. Return Result (5ms)        │  Send to user
-│                                 │  • Prediction: Phishing/Legitimate
-│   PHISHING ⚠️                   │  • Confidence: 93%
-│   Confidence: 93%               │  • Why: Feature breakdown
-│   Category: Credential harvester│  • Save to database
-└─────────────────────────────────┘
-
-Total Time: ~130ms (Real-time!) ⚡
-```
-
----
-
-## 📊 Current Status
-
-| Component               | Status         | Details                           |
-| ----------------------- | -------------- | --------------------------------- |
-| **Backend API**         | 🔄 In Progress | Django REST framework setup       |
-| **Feature Engineering** | 📋 Planned     | URL feature extraction module     |
-| **ML Models**           | 📋 Planned     | Ensemble learning implementation  |
-| **Frontend UI**         | 📋 Planned     | React + real-time checking        |
-| **Database**            | 📋 Planned     | MongoDB for predictions history   |
-| **Explainability**      | 📋 Planned     | SHAP integration for explanations |
-| **Testing**             | 📋 Planned     | Model evaluation & API tests      |
-| **Documentation**       | 📋 Planned     | API docs + guides                 |
-
-**Current Progress: `[░░░░░░░░░░░░░░░░░░░░]` 5%** — Just getting started! 🚀
-
----
-
-## 🗺️ Project Roadmap
-
-### Phase 1: Foundation & Data (Week 1-2)
-
-**Goal:** Setup project structure and collect training data
-
-- [ ] GitHub repository with proper structure
-- [ ] Django backend scaffold
-- [ ] MongoDB integration
-- [ ] Download phishing URL datasets
-  - PhishTank (phishing URLs)
-  - UNB dataset (legitimate URLs)
-  - Target: 10,000-11,000 URLs (balanced)
-- [ ] Data exploration notebook
-
-**Deliverable:** Structured project + cleaned dataset
-
----
-
-### Phase 2: Feature Engineering (Week 2-3)
-
-**Goal:** Extract meaningful features from URLs
-
-- [ ] Build `URLFeatureExtractor` class
-- [ ] Extract 30-50 features:
-  - 9 address bar features
-  - 4 domain-based features
-  - 4 HTML/content features
-  - 13+ advanced features
-- [ ] Feature correlation analysis
-- [ ] Remove redundant features
-- [ ] Normalize/scale features
-- [ ] Create feature visualization notebook
-
-**Deliverable:** Feature extraction pipeline + processed dataset
-
----
-
-### Phase 3: ML Model Training (Week 3-4)
-
-**Goal:** Train ensemble learning models
-
-**Base Classifiers (train individually):**
-
-- [ ] Random Forest
-- [ ] XGBoost
-- [ ] Gradient Boosting
-- [ ] LightGBM
-- [ ] CatBoost
-- [ ] Support Vector Machine (SVM)
-- [ ] Logistic Regression
-- [ ] Decision Tree
-
-**Ensemble Approach:**
-
-- [ ] Stacking ensemble (meta-learner: Logistic Regression)
-- [ ] Voting classifier (hard voting)
-- [ ] Hyperparameter tuning (GridSearchCV)
-
-**Model Evaluation:**
-
-- [ ] Accuracy, Precision, Recall, F1-Score
-- [ ] ROC-AUC curves
-- [ ] Confusion matrix
-- [ ] Cross-validation (k-fold)
-
-**Target Accuracy:** >95%
-
-**Deliverable:** Trained ensemble model + evaluation report
-
----
-
-### Phase 4: Explainability (Week 4-5)
-
-**Goal:** Make predictions interpretable
-
-- [ ] Integrate SHAP library
-- [ ] Feature importance visualization
-- [ ] Individual prediction explanations
-- [ ] Decision reasoning for each URL
-- [ ] Contribution breakdown chart
-- [ ] Create explainability service module
-
-**Deliverable:** SHAP explainer + visualization UI
-
----
-
-### Phase 5: Backend API (Week 5-6)
-
-**Goal:** Build REST API for predictions
-
-**Endpoints:**
-
-- [ ] `POST /api/check-url/` — Check single URL
-- [ ] `POST /api/batch-check/` — Check multiple URLs
-- [ ] `GET /api/predictions/` — Get prediction history
-- [ ] `GET /api/predictions/{id}/` — Get specific prediction
-- [ ] `GET /api/categories/` — Get phishing categories
-- [ ] `GET /api/health/` — Health check
-- [ ] `GET /api/docs/` — API documentation
-- [ ] `GET /api/stats/` — System statistics
-
-**Features:**
-
-- [ ] Input validation
-- [ ] File upload handling
-- [ ] Real-time prediction (< 200ms)
-- [ ] Database persistence
-- [ ] Error handling
-- [ ] API rate limiting
-- [ ] Swagger UI documentation
-
-**Deliverable:** Production-ready REST API
-
----
-
-### Phase 6: Frontend UI (Week 6-7)
-
-**Goal:** Beautiful user interface
-
-**Pages:**
-
-- [ ] Home/Landing page
-  - What is phishing?
-  - How PhishGuard works
-  - Key features showcase
-- [ ] Check URL page
-  - URL input field
-  - Real-time checking indicator
-  - Results display
-  - Explanation visualization
-- [ ] Batch Check page
-  - Multiple URL upload
-  - CSV import
-  - Results download
-- [ ] History page
-  - Previous predictions
-  - Filters & search
-  - Statistics
-- [ ] Dashboard page
-  - Stats & analytics
-  - Most common phishing patterns
-  - Protection statistics
-
-**Features:**
-
-- [ ] Real-time input validation
-- [ ] Beautiful UI with Tailwind CSS
-- [ ] Animations with Framer Motion
-- [ ] Responsive design (mobile-friendly)
-- [ ] Dark mode support
-- [ ] Local storage for history
-- [ ] Share results functionality
-
-**Deliverable:** Full-featured React frontend
-
----
-
-### Phase 7: Integration & Testing (Week 7-8)
-
-**Goal:** End-to-end system integration
-
-- [ ] Frontend ↔ Backend API integration
-- [ ] Database connectivity verification
-- [ ] Model loading & inference testing
-- [ ] CORS configuration
-- [ ] End-to-end workflow testing
-- [ ] Performance testing
-- [ ] Security testing
-- [ ] Load testing
-
-**Deliverable:** Fully integrated, tested system
-
----
-
-### Phase 8: Documentation & Polish (Week 8)
-
-**Goal:** Complete documentation and deployment
-
-- [ ] API documentation (Swagger)
-- [ ] User guide
-- [ ] Installation guide (Windows/Mac/Linux)
-- [ ] Architecture documentation
-- [ ] Feature engineering explanation
-- [ ] Model training guide
-- [ ] Troubleshooting guide
-- [ ] Code comments & docstrings
-- [ ] Deploy to GitHub Pages
-- [ ] Create demo video
-
-**Deliverable:** Complete documentation + production-ready code
-
----
-
-## 📈 Progress Tracker
-
-```
-Phase 1: Foundation & Data       [░░░░░░░░░░░░░░░░░░░░]   0% 📋
-Phase 2: Feature Engineering     [░░░░░░░░░░░░░░░░░░░░]   0% 📋
-Phase 3: ML Model Training       [░░░░░░░░░░░░░░░░░░░░]   0% 📋
-Phase 4: Explainability          [░░░░░░░░░░░░░░░░░░░░]   0% 📋
-Phase 5: Backend API             [░░░░░░░░░░░░░░░░░░░░]   0% 📋
-Phase 6: Frontend UI             [░░░░░░░░░░░░░░░░░░░░]   0% 📋
-Phase 7: Integration & Testing   [░░░░░░░░░░░░░░░░░░░░]   0% 📋
-Phase 8: Documentation & Polish  [░░░░░░░░░░░░░░░░░░░░]   0% 📋
-
-Overall Progress: [░░░░░░░░░░░░░░░░░░░░] 0% — Let's build! 🚀
-```
-
----
-
-## 🚀 Quick Start
+## Quick start
 
 ### Prerequisites
 
-- Python 3.9+
-- Node.js 18+
-- MongoDB 8.0+
-- Git
-- 4GB RAM minimum
+- Python 3.9 or newer
+- Node.js 18 or newer
+- npm
+- MongoDB for persistent history only
 
-### Installation
+### Recommended: root Makefile
+
+From the repository root:
 
 ```bash
-# 1. Clone repository
-git clone https://github.com/YourUsername/PhishGuard.git
-cd PhishGuard
+make install       # create the API environment and install API/web dependencies
+make setup-env     # create api/.env when it does not exist
+make dev           # launch API and web in separate Terminal windows on macOS
+```
 
-# 2. Setup Backend
-cd backend
+The services use these local addresses:
+
+- API: `http://127.0.0.1:8000`
+- Web: `http://localhost:5173`
+
+Useful commands:
+
+```bash
+make doctor        # inspect local prerequisites
+make check         # run Django system checks
+make test          # run the API test suite
+make build         # create the Vite production build
+make ci            # check, test, and build
+make dev-single    # run API and web from one terminal
+```
+
+`make dev` uses macOS Terminal tabs/windows. On other platforms, use `make dev-single` or start the API and web manually.
+
+### Manual setup
+
+API:
+
+```bash
+cd api
 python -m venv .venv
-
-# Activate virtual environment
-# On Linux/Mac:
-source .venv/bin/activate
-# On Windows:
-.venv\Scripts\activate
-
-# Install dependencies
+source .venv/bin/activate                 # Windows: .venv/Scripts/activate
 pip install -r requirements.txt
+cp .env.example .env
+python manage.py runserver 127.0.0.1:8000
+```
 
-# 3. Setup Frontend
-cd ../frontend
+Web, in a second terminal:
+
+```bash
+cd web
 npm install
-
-# 4. Start MongoDB
-mongod
-# Or if using Docker:
-docker run -d -p 27017:27017 --name mongodb mongo
-
-# 5. Run Backend
-cd ../backend
-source .venv/bin/activate
-python manage.py runserver
-# Backend at http://localhost:8000
-
-# 6. Run Frontend (new terminal)
-cd frontend
-npm run dev
-# Frontend at http://localhost:5173
+npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
----
+The web client defaults to `http://localhost:8000/api`. Set `VITE_API_BASE_URL` when the API is hosted elsewhere, for example:
 
-## 🛡️ Tech Stack
-
-| Category               | Technologies                                      |
-| ---------------------- | ------------------------------------------------- |
-| **Backend**            | Python 3.9, Django 4.2, Django REST Framework     |
-| **Frontend**           | React 18, TypeScript, Tailwind CSS, Framer Motion |
-| **ML/AI**              | scikit-learn, XGBoost, CatBoost, LightGBM, SHAP   |
-| **Database**           | MongoDB 8.0, MongoEngine ORM                      |
-| **Feature Extraction** | pandas, NumPy, urllib3                            |
-| **Documentation**      | Swagger/drf-yasg, ReDoc                           |
-| **Deployment**         | Docker (optional), GitHub Pages, Railway/Vercel   |
-
----
-
-## 📁 Project Structure
-
+```bash
+VITE_API_BASE_URL=http://127.0.0.1:8000/api npm run dev
 ```
+
+### MongoDB
+
+MongoDB is optional for analysis and required only for saved history. The development defaults use:
+
+- URI: `mongodb://127.0.0.1:27017`
+- Database: `phishguard`
+- Collection: `scans`
+
+Override `MONGODB_URI` and `MONGODB_DATABASE` in `api/.env` when needed. Connection and socket timeouts are bounded so an unavailable local MongoDB instance does not block the analysis path indefinitely.
+
+## API endpoints
+
+| Method | Endpoint        | Purpose                                                    |
+| ------ | --------------- | ---------------------------------------------------------- |
+| `GET`  | `/`             | Return service information and endpoint links              |
+| `GET`  | `/api/health/`  | Report API availability and the optional database boundary |
+| `POST` | `/api/scan/`    | Analyze one URL                                            |
+| `GET`  | `/api/history/` | Return recent persisted scans                              |
+
+Example scan request:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/scan/ \
+  -H 'Content-Type: application/json' \
+  -d '{"url":"https://example.com/login"}'
+```
+
+See [docs/API_REFERENCE.md](./docs/API_REFERENCE.md) for request validation, response fields, and examples.
+
+## Documentation map
+
+- [Project plan](./docs/project-plan.md) — verified Phase 1 workstreams, completion criteria, and future phases.
+- [Project synopsis](./docs/project-synopsis.md) — academic description of the problem, method, scope, and limitations.
+- [Architecture](./docs/ARCHITECTURE.md) — module responsibilities and end-to-end data flow.
+- [API reference](./docs/API_REFERENCE.md) — HTTP contract and response examples.
+- [Development guide](./docs/DEVELOPMENT_GUIDE.md) — setup, configuration, commands, and troubleshooting.
+- [Testing guide](./docs/TESTING_GUIDE.md) — current test coverage and verification workflow.
+- [Roadmap](./docs/ROADMAP.md) — staged future work without presenting it as implemented functionality.
+- [Contributing guide](./docs/CONTRIBUTING.md) — repository conventions and change checklist.
+
+## Project structure
+
+```text
 PhishGuard/
-├── backend/                          # Django REST API
-│   ├── .venv/                       # Virtual environment
-│   ├── phishguard/
-│   │   ├── settings.py              # Django settings
-│   │   ├── urls.py                  # URL routing
-│   │   └── wsgi.py
-│   ├── api/
-│   │   ├── views.py                 # API endpoints
-│   │   ├── serializers.py           # Data serializers
-│   │   └── urls.py
-│   ├── ml/
-│   │   ├── feature_extractor.py     # URL feature extraction
-│   │   ├── model_manager.py         # Model loading & prediction
-│   │   ├── explainer.py             # SHAP explainability
-│   │   └── models/                  # Trained models
-│   │       ├── ensemble_model.pkl
-│   │       └── feature_names.json
-│   ├── data/
-│   │   ├── raw/                     # Raw datasets
-│   │   └── processed/               # Cleaned data
-│   ├── notebooks/
-│   │   ├── 01_data_exploration.ipynb
-│   │   ├── 02_feature_engineering.ipynb
-│   │   └── 03_model_training.ipynb
-│   ├── requirements.txt
-│   └── manage.py
-│
-├── frontend/                         # React Application
-│   ├── src/
-│   │   ├── pages/
-│   │   │   ├── Home.tsx
-│   │   │   ├── CheckURL.tsx
-│   │   │   ├── Results.tsx
-│   │   │   ├── History.tsx
-│   │   │   └── Dashboard.tsx
-│   │   ├── components/
-│   │   │   ├── URLInput.tsx
-│   │   │   ├── ResultCard.tsx
-│   │   │   ├── ExplanationChart.tsx
-│   │   │   └── Navigation.tsx
-│   │   ├── hooks/
-│   │   │   └── usePhishCheck.ts
-│   │   └── App.tsx
-│   ├── package.json
-│   └── vite.config.ts
-│
-├── README.md                        # This file!
-├── QUICKSTART.md                    # Quick setup guide
-├── ARCHITECTURE.md                  # System design details
-└── .gitignore
+├── api/
+│   ├── config/                 Django settings and URL configuration
+│   ├── data/{raw,processed}/  Local data placeholders; contents are ignored
+│   ├── logs/                  Runtime logs; contents are ignored
+│   ├── ml-models/             Optional model artifacts; contents are ignored
+│   ├── tests/                 API and analysis tests
+│   ├── url_analysis/          Feature extraction, prediction, persistence
+│   ├── web_api/               REST serializers, views, and routes
+│   ├── manage.py
+│   └── requirements.txt
+├── web/
+│   ├── src/components/        Scan, result, and history components
+│   ├── src/hooks/             React state hooks
+│   ├── src/services/          Fetch-based API client
+│   ├── src/App.jsx
+│   ├── src/main.jsx
+│   └── package.json
+├── public/                    Lowercase project branding assets
+├── docs/                      Project, architecture, API, and workflow docs
+├── LICENSE                    PhishGuard source-available license
+├── Makefile                   Root development shortcuts
+└── README.md
 ```
 
----
+## Verification
 
-## 🧠 Key Concepts
+Run the repository-level checks from the project root:
 
-### Feature Engineering
-
-We extract **30-50 features** from URLs to detect patterns that indicate phishing:
-
-```python
-# Example: Check for suspicious @ symbol
-url = "https://google.com@malicious.ru"
-#               ↑ Attacker hides true domain here!
-features['has_at_symbol'] = 1  # RED FLAG! 🚩
+```bash
+make check
+make test
+make build
+python3 -m compileall -q api
 ```
 
-### Ensemble Learning
+`git diff --check` is also recommended before committing. The API test suite currently covers stable feature ordering, representative feature flags, API-root details, verdict values, and confidence bounds. The web project currently provides a Vite production build rather than a separate frontend test suite.
 
-Instead of trusting one model, we combine multiple models:
+## Limitations and safety boundary
 
-```
-Random Forest prediction   →  0.92 (Phishing)
-XGBoost prediction       →  0.95 (Phishing)
-SVM prediction           →  0.88 (Phishing)
-LightGBM prediction      →  0.94 (Phishing)
-Voting Ensemble          →  0.93 (FINAL)
+- URL analysis is lexical and hostname-based; it does not inspect HTML, forms, redirects, certificates, DNS, WHOIS data, page reputation, or live network behavior.
+- A heuristic verdict is not a threat-intelligence lookup and can produce false positives or false negatives.
+- No accuracy, recall, precision, latency, or coverage target is asserted by the current repository.
+- The optional model artifact is not included, and the repository does not yet provide the dataset, training script, evaluation report, or artifact metadata needed to make model-quality claims.
+- There is no authentication, batch endpoint, browser extension, email scanner, dashboard, or SHAP integration in Phase 1.
+- The custom license permits academic and evaluation use but does not grant commercial rights. Third-party dependencies, datasets, and model artifacts may have separate terms.
 
-Why? Because "Wisdom of the crowd" works! 🧠
-```
+## Roadmap
 
-### Explainability (SHAP)
+1. Add licensed dataset ingestion and a reproducible training/evaluation pipeline.
+2. Record model metadata and validate optional artifacts against the 20-feature contract.
+3. Improve persistence diagnostics and make configurable limits consistently effective.
+4. Consider batch scanning, history filtering, authentication, and richer UI only after the baseline is measured.
+5. Evaluate additional explainability methods and model families as research work, not as assumed capabilities.
+6. Add deployment, observability, and security hardening only when a concrete target environment exists.
 
-We don't just say "it's phishing" — we explain why:
+See [docs/ROADMAP.md](./docs/ROADMAP.md) for staged acceptance criteria.
 
-```
-Prediction: PHISHING ⚠️
-Confidence: 93%
+## License
 
-Why?
-1. Suspicious domain name    (contributes 45%)
-2. URL uses IP address       (contributes 30%)
-3. Unusual URL length        (contributes 25%)
-
-Trust the system because you understand it! ✨
-```
-
----
-
-## 🎓 Learning Outcomes
-
-By completing this project, your team will learn:
-
-**Machine Learning:**
-
-- [ ] Feature engineering & extraction
-- [ ] Ensemble learning methods
-- [ ] Model evaluation & hyperparameter tuning
-- [ ] Classification problems & evaluation metrics
-- [ ] Model explainability techniques
-
-**Web Development:**
-
-- [ ] Full-stack application architecture
-- [ ] Django REST API design
-- [ ] Real-time frontend updates
-- [ ] Database integration
-- [ ] API documentation
-
-**Cybersecurity:**
-
-- [ ] Phishing attack mechanisms
-- [ ] URL anatomy & suspicious patterns
-- [ ] Security best practices
-- [ ] Data protection strategies
-
-**Professional Skills:**
-
-- [ ] Project management (8-week timeline)
-- [ ] Team collaboration (4 people)
-- [ ] Git & version control
-- [ ] Technical documentation
-- [ ] Presentation skills
-
----
-
-## 🤝 Team Roles
-
-Suggested role distribution for 4-person team:
-
-| Role              | Responsibilities                                    |
-| ----------------- | --------------------------------------------------- |
-| **ML Lead**       | Feature engineering, model training, explainability |
-| **Backend Lead**  | Django API, database, model integration             |
-| **Frontend Lead** | React UI, visualization, user experience            |
-| **DevOps/QA**     | Testing, documentation, deployment                  |
-
-_Note: Everyone should understand the full system!_
-
----
-
-## 📚 Resources & References
-
-### Datasets
-
-- **PhishTank**: https://www.phishtank.com/
-- **UNB URL Dataset**: https://www.unb.ca/cic/datasets/url-2016.html
-- **Kaggle Phishing URLs**: https://www.kaggle.com/
-
-### Papers & Articles
-
-- Feature extraction for phishing detection
-- Ensemble learning for cybersecurity
-- SHAP: SHapley Additive exPlanations
-
-### Libraries Documentation
-
-- scikit-learn: https://scikit-learn.org/
-- XGBoost: https://xgboost.readthedocs.io/
-- SHAP: https://shap.readthedocs.io/
-- Django REST: https://www.django-rest-framework.org/
-
----
-
-## 🎯 Success Metrics
-
-| Metric             | Target                          |
-| ------------------ | ------------------------------- |
-| **Model Accuracy** | >95%                            |
-| **Precision**      | >94% (minimize false positives) |
-| **Recall**         | >96% (catch most attacks)       |
-| **F1-Score**       | >95%                            |
-| **Inference Time** | <200ms per URL                  |
-| **API Uptime**     | 99.5%                           |
-| **Code Coverage**  | >85%                            |
-| **Documentation**  | 100% complete                   |
-
----
-
-## 🚀 Getting Help
-
-**Stuck?** Here's where to look:
-
-1. **QUICKSTART.md** — Quick setup guide
-2. **ARCHITECTURE.md** — Deep dive into system design
-3. **backend/notebooks/** — Jupyter notebooks with examples
-4. **API Documentation** — http://localhost:8000/api/docs/
-5. **GitHub Issues** — Ask questions & report bugs
-6. **Team Discussion** — Slack/Discord for real-time help
-
----
-
-## 📝 Next Steps
-
-1. ✅ **Read this README** (you are here!)
-2. 📋 **Review QUICKSTART.md** — Get the project running
-3. 🏗️ **Read ARCHITECTURE.md** — Understand the system
-4. 💻 **Start Phase 1** — Create GitHub repo & setup backend
-5. 🤝 **Assign team roles** — Divide responsibilities
-6. 📊 **Download datasets** — Get phishing URLs ready
-
-**Timeline:** 8 weeks from start to production! ⏰
-
----
-
-## 📊 Final Statistics
-
-| Aspect              | Details                   |
-| ------------------- | ------------------------- |
-| **Team Size**       | 4 people                  |
-| **Duration**        | 8 weeks                   |
-| **Project Type**    | Full-stack ML application |
-| **Difficulty**      | Advanced (ML + Web)       |
-| **Learning Value**  | 🌟🌟🌟🌟🌟 (5/5)          |
-| **Portfolio Worth** | 🔥🔥🔥🔥🔥 (5/5)          |
-
----
+PhishGuard is distributed under the [PhishGuard Source-Available Academic and Evaluation License](./LICENSE). It is not an OSI-approved open-source license and does not grant commercial-use rights.
 
 <div align="center">
 
-## 🎊 Ready to Build?
-
-### 🛡️ PhishGuard: Protecting the Internet, One URL at a Time 🛡️
-
-**Let's catch those phishing attacks and keep the internet safe!**
-
----
-
-**Next: [→ QUICKSTART.md](./QUICKSTART.md)** for setup instructions
-
 Built with ❤️ by Dibakar
 
-_PhishGuard - Real-Time Phishing Detection with Explainable AI_
-
 </div>
-
----
