@@ -1,7 +1,7 @@
 const verdictLabels = {
   phishing: "High risk",
   suspicious: "Review",
-  legitimate: "Likely safe",
+  legitimate: "No obvious structural red flags",
 };
 
 function formatDate(value) {

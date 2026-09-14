@@ -1,6 +1,6 @@
 # PhishGuard Progress Dashboard
 
-> A single-glance reference for the team. This tracker separates verified implementation from remaining engineering work and planned research.
+> A single-glance team reference for the verified Phase 1 backend, its deliberate boundaries, and the work that remains before Phase 2 research.
 >
 > **Frontend rule:** React + JavaScript + JSX only. TypeScript and TSX are not part of this project convention.
 
@@ -8,60 +8,78 @@
 
 | Phase | Status | What it means |
 | --- | --- | --- |
-| **Phase 1 — Verified baseline** | ✅ **Complete** | The core URL-analysis application is implemented and the documented baseline checks have passed. |
-| **Phase 1.1 — Quality and reproducibility** | 🟡 **Next work** | The baseline exists; it still needs stronger fixtures, artifact validation, edge-case coverage, and reproducibility evidence. |
-| **Final Phase 2 — Measured model research** | ⬜ **Planned** | Build and evaluate a documented model workflow against the current heuristic baseline. |
+| **Phase 1 — Backend baseline** | ✅ **Complete** | The Django REST + MongoEngine URL-analysis backend is implemented, tested, and documented for the current single-URL workflow. |
+| **Phase 1.1 — Quality and reproducibility** | 🟡 **Next work** | Strengthen evidence with a licensed fixture, deterministic evaluation, artifact provenance, and a clean-environment run. |
+| **Final Phase 2 — Measured model research** | ⬜ **Planned** | Train and evaluate a documented model against the Phase 1 heuristic baseline. |
 | **Phase 3 — Product workflows** | ⬜ **Later** | Consider accounts, batch workflows, filtering, exports, and richer UI only after measurement. |
 | **Phase 4 — Additional evidence sources** | 🔬 **Research only** | Investigate live or external evidence cautiously; this would change the current network-free safety boundary. |
 | **Phase 5 — Deployment hardening** | ⏸️ **Not scheduled** | Define a target environment first; do not describe the project as production-ready yet. |
 
-A numeric overall percentage is intentionally not used: Phase 2 is research work whose completion depends on licensed data, reproducible experiments, and evidence—not only on the number of files or screens completed.
+A numeric overall percentage is intentionally not used: Phase 2 depends on licensed data, reproducible experiments, and evidence—not only on the number of files or screens completed.
 
-## What is complete in Phase 1
+## What is complete in the Phase 1 backend
 
-The following work is implemented and verified in the current repository:
+The following work is implemented in the current repository and covered by the current automated checks:
 
-- [x] Repository boundaries are established with `api/`, `web/`, `public/`, and `docs/`.
-- [x] Django REST Framework exposes the root, health, single-URL scan, and history endpoints.
-- [x] One URL is validated, normalized, and limited to 2,048 characters.
-- [x] Twenty deterministic URL and hostname features are extracted locally.
-- [x] Analysis remains network-free: submitted websites are not visited or fetched.
-- [x] The baseline returns `legitimate`, `suspicious`, or `phishing` with human-readable reasons.
-- [x] An optional compatible `joblib` model hook exists, with heuristic fallback when the artifact is absent or unusable.
-- [x] Normal backend startup performs a bounded MongoDB reachability check.
+### API and configuration
+
+- [x] Django REST Framework exposes `/`, `/api/health/`, `/api/capabilities/`, `/api/scan/`, and `/api/history/`.
+- [x] JSON scan input is validated through a shared URL-validation module.
+- [x] URLs are trimmed, length-limited, restricted to HTTP/HTTPS semantics, and rejected when malformed, internally spaced, backslash-containing, or missing a usable hostname.
+- [x] `MAX_URL_LENGTH`, `MAX_BATCH_SIZE`, and `HISTORY_LIMIT` are read from settings and rejected at startup when non-positive.
+- [x] Health and capabilities responses expose the Phase 1 boundary, limits, model state, database state, and unavailable future features.
+
+### Analysis and prediction
+
+- [x] Twenty deterministic URL and hostname features are extracted locally in the stable `url-features-v1` order.
+- [x] Analysis remains network-free: submitted websites are never visited, fetched, resolved, or remotely inspected.
+- [x] The baseline returns `legitimate`, `suspicious`, or `phishing` with human-readable reasons and confidence bounded to `[0, 1]`.
+- [x] An optional `joblib` model hook validates the feature count/order and prediction shape before inference.
+- [x] Missing, incompatible, or failing optional-model artifacts fall back to the heuristic predictor.
+- [x] Responses include analyzer metadata, explicitly report `network_accessed: false`, and expose the separate local brand-confusion advisory metadata.
+- [x] The local brand rules cover a small, documented set of simple hostname look-alike patterns without changing the stable 20-feature model contract.
+
+### Persistence and diagnostics
+
+- [x] Normal `runserver` startup performs a bounded MongoDB reachability check.
 - [x] `--force` / `FORCE=1` provides an explicit diagnostic bypass when MongoDB is unavailable.
-- [x] Scan persistence uses MongoEngine/MongoDB when available; a forced diagnostic session can still return lexical analysis if persistence fails.
-- [x] The frontend is React/Vite with JavaScript and JSX pages and components.
-- [x] Local setup, check, test, compile, build, and development commands are documented.
-- [x] API tests, Django checks, Python compilation, frontend build, documentation-link checks, and whitespace checks have been run successfully.
+- [x] MongoEngine scan persistence is best-effort after startup; analysis remains usable when a probe or save fails.
+- [x] MongoDB retry suppression, bounded probes, safe database diagnostics, and logged save/history failures are implemented.
+- [x] History requests are capped by the configured `HISTORY_LIMIT`.
+- [x] Scan documents carry bounded confidence, feature/explanation defaults, and analyzer-version metadata.
+
+### Verification and documentation
+
+- [x] Focused API tests cover feature ordering/version, malformed input, strict IPv4 handling, configurable limits, model fallback/compatibility, local brand-confusion behavior, health/capabilities, force handling, history limits, and persistence-failure tolerance.
+- [x] Root `make ci` passed: Django checks, the API pytest suite (`29` tests), and the Vite production build.
+- [x] Root `python3 -m compileall -q api` and `git diff --check` passed.
+- [x] API and architecture references document the current routes, feature contract, validation, limits, persistence boundary, and Phase 1 non-goals.
+
+> **Verification boundary:** the automated suite uses fallback/mocked database paths where necessary. A live MongoDB persistence run, a compatible trained model inference run, browser behavior, and model-quality metrics remain unverified until explicitly executed.
 
 ### Deliberately not claimed as complete
 
-These are not hidden unfinished promises inside Phase 1; they are explicitly outside the verified baseline:
-
-- No bundled trained model or reproducible training pipeline.
-- No licensed evaluation dataset or reported accuracy, precision, recall, F1-score, calibration, or latency result.
-- No batch-scanning endpoint.
-- No authentication, user accounts, dashboard, browser extension, or email scanner.
-- No SHAP integration or other advanced explainer.
+- No bundled compatible trained model, reproducible training pipeline, or licensed evaluation dataset.
+- No accuracy, precision, recall, F1-score, calibration, or latency claim.
+- No batch-scanning endpoint, authentication, user accounts, dashboard, browser extension, or email scanner.
+- No SHAP integration or advanced explainer.
 - No HTML, DOM, redirect, certificate, DNS, WHOIS, reputation, or live website inspection.
+- No comprehensive brand, typosquatting, domain-ownership, or threat-intelligence coverage; the local rules are advisory and incomplete.
 - No production security-gateway or safe-browsing guarantee.
 
-## Remaining Phase 1 work: Phase 1.1
+## Remaining Phase 1.1 work
 
-**Objective:** make the current baseline easier to reproduce, test, review, and extend without overstating its capabilities.
+**Objective:** make the current backend easier to reproduce, evaluate, review, and extend without overstating its capabilities.
 
 | Priority | Remaining job | Suggested owner | Definition of done |
 | --- | --- | --- | --- |
-| P0 | Add a small, licensed, versioned fixture or evaluation dataset. | ML / Research | The source, license, schema, version, and permitted academic use are documented. |
-| P0 | Add a deterministic evaluation command and report format. | ML / Research | A clean setup can run the command and produce results tied to the dataset and feature version. |
-| P0 | Add model-artifact metadata and feature-contract validation. | ML + Backend | The application checks feature order, label mapping, provenance, and artifact version before inference. |
-| P1 | Expand edge-case tests for malformed URLs, whitespace normalization, verdict boundaries, and confidence bounds. | Backend + QA | Tests cover expected validation and prediction behavior and pass from the repository root. |
-| P1 | Test best-effort persistence and forced diagnostic sessions explicitly. | Backend + QA | MongoDB failure behavior is tested and documented without changing the scan response contract. |
-| P1 | Improve structured diagnostics for MongoDB connection and save failures. | Backend | Logs identify the failure stage while keeping timeouts bounded and useful. |
-| P1 | Clarify or remove configuration values that are reserved or only partially consumed. | Backend + Docs | `.env.example`, settings, documentation, and runtime behavior agree. |
-| P1 | Run a clean setup and collect academic evidence. | QA + Docs | A fresh environment reproduces the checks; screenshots and representative API responses are recorded. |
-| P1 | Keep all documentation and examples synchronized with observed behavior. | Docs + Project lead | No future capability is described as current, and links/examples pass review. |
+| P0 | Add a small, licensed, versioned fixture or evaluation dataset. | ML / Research | Source, license, schema, version, and permitted academic use are documented. |
+| P0 | Add a deterministic evaluation command and report format. | ML / Research | A clean setup produces results tied to the dataset and `url-features-v1`. |
+| P0 | Add model-artifact metadata and provenance. | ML + Backend | Feature order, label mapping, training reference, artifact version, and provenance are recorded. |
+| P1 | Perform a clean-environment installation and verification run. | QA + Docs | A new team member reproduces the checks without relying on this machine's generated state. |
+| P1 | Run a deliberate MongoDB-backed smoke test. | Backend + QA | Startup, save, history, and failure behavior are recorded with a reachable local MongoDB instance. |
+| P1 | Test a compatible model artifact end to end. | ML + Backend | Model loading, prediction, metadata, and fallback behavior are evidenced with a documented artifact. |
+| P1 | Keep examples synchronized with observed behavior. | Docs + Project lead | Route tables, feature contract, limits, setup commands, and limitations remain accurate. |
 
 ### Phase 1.1 exit gate
 

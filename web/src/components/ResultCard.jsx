@@ -14,9 +14,9 @@ const verdictMeta = {
     symbol: "?",
   },
   legitimate: {
-    badge: "Likely safe",
-    title: "No strong red flags found.",
-    summary: "This URL looks structurally ordinary, but stay mindful of the page you open.",
+    badge: "No obvious structural red flags",
+    title: "No obvious structural red flags found.",
+    summary: "The URL looks structurally ordinary, but this analysis is not a safety guarantee.",
     tone: "safe",
     symbol: "✓",
   },

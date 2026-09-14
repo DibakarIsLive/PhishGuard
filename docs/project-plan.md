@@ -27,6 +27,7 @@ This boundary keeps the first implementation understandable and prevents unsuppo
 - [x] Extract a stable set of 20 URL and hostname features.
 - [x] Produce `legitimate`, `suspicious`, or `phishing` verdicts.
 - [x] Return human-readable reasons for the baseline prediction.
+- [x] Apply a small versioned local brand-confusion advisory check without changing the 20-feature model contract.
 - [x] Keep the analysis path network-free: submitted websites are not visited or fetched.
 - [x] Support an optional compatible `api/ml-models/phishguard_model.joblib` artifact.
 - [x] Fall back to the heuristic predictor when the optional model is absent or cannot be used.
@@ -57,6 +58,7 @@ The Django application exposes:
 
 - `/` — service information and endpoint links.
 - `/api/health/` — API availability and the MongoDB-required normal-startup boundary.
+- `/api/capabilities/` — current Phase 1 limits and explicitly unavailable future capabilities.
 - `/api/scan/` — analysis of one URL.
 - `/api/history/` — recent persisted scans.
 
@@ -89,6 +91,8 @@ The REST layer uses JSON parsing, permissive Phase 1 access, anonymous throttlin
 
 The extractor parses the URL string locally. It does not make DNS, HTTP, TLS, page-content, or third-party service requests.
 
+A separate `brand_confusion.py` module applies a small, versioned local ruleset to selected brand-like hostname labels. It supports only explicit ASCII substitutions, separators, and simple one-edit variations outside configured official domains. This advisory result is not added to the 20-feature vector and is not comprehensive brand, typosquatting, ownership, or threat-intelligence coverage.
+
 ### 4.3 Predictor layer
 
 The predictor first looks for the optional joblib artifact. When no compatible result is available, it evaluates a transparent weighted heuristic using indicators such as:
@@ -101,8 +105,9 @@ The predictor first looks for the optional joblib artifact. When no compatible r
 - Encoded characters.
 - Unusually long URLs.
 - Several subdomains.
+- A separate configured brand-like hostname pattern, when a local advisory rule matches.
 
-The heuristic maps its score to one of three verdicts and returns a bounded confidence value plus reasons. The confidence value is a predictor output, not a validated probability or accuracy measurement.
+The heuristic maps its score to one of three verdicts and returns a bounded confidence value plus reasons. The confidence value is a predictor output, not a validated probability or accuracy measurement. A compatible optional model keeps its own label; the brand signal may add an advisory reason without changing the model input vector.
 
 ### 4.4 Persistence layer
 

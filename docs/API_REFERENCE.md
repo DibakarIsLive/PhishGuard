@@ -45,23 +45,51 @@ Example response:
 
 ## `GET /api/health/`
 
-Reports that the API is available and identifies MongoDB as required for normal backend startup.
+Reports API availability together with structured, safe diagnostics for the network-free analyzer, MongoDB state, and optional model artifact.
 
 ```bash
 curl http://127.0.0.1:8000/api/health/
 ```
 
-Example response:
+Example response when no model artifact has been installed and no MongoDB probe has been made in the current process:
 
 ```json
 {
   "status": "ok",
   "service": "phishguard-api",
-  "database": "MongoDB required for normal startup"
+  "phase": "phase-1",
+  "analysis": {
+    "status": "available",
+    "network_accessed": false,
+    "brand_confusion_rules": "local-brand-rules-v1"
+  },
+  "database": {
+    "status": "unknown",
+    "required_for_normal_startup": true,
+    "database": "phishguard",
+    "last_checked_at": null
+  },
+  "model": {
+    "status": "fallback",
+    "available": false,
+    "feature_version": "url-features-v1",
+    "feature_count": 20,
+    "reason": "No optional model artifact is present."
+  }
 }
 ```
 
-A successful health response is served after the backend startup check has passed, unless the server was started with the explicit `--force` diagnostic bypass. It does not mean that a model artifact is present.
+A successful health response means that Django can serve the endpoint. It does not claim that MongoDB is currently reachable, that a model artifact is compatible, or that the classifier is accurate. Normal `runserver` startup still checks MongoDB; the explicit `--force` diagnostic bypass can start without it.
+
+## `GET /api/capabilities/`
+
+Returns the implemented Phase 1 boundary, configuration limits, persistence mode, optional model state, and explicitly unavailable future features. This endpoint is intended for local development and frontend coordination; it is not an authorization or feature-flag system.
+
+```bash
+curl http://127.0.0.1:8000/api/capabilities/
+```
+
+The response reports single-URL analysis, network-free behavior, the 20-feature contract, best-effort history persistence, `MAX_URL_LENGTH`, `HISTORY_LIMIT`, and deferred capabilities such as batch scanning, authentication, live reputation lookup, HTML inspection, and SHAP attribution. It also identifies the version of the small local brand-confusion ruleset used for advisory hostname checks.
 
 ## `POST /api/scan/`
 
@@ -88,7 +116,9 @@ Rules:
 - `url` is required.
 - It must be a string.
 - Surrounding whitespace is trimmed.
-- The serializer accepts at most 2,048 characters.
+- The serializer accepts at most `MAX_URL_LENGTH` characters (2,048 by default).
+- Only HTTP and HTTPS schemes are supported when a scheme is supplied.
+- Internal whitespace, backslashes, invalid ports, and missing hostnames are rejected.
 - A usable domain/network location is required by the analysis service.
 - A scheme is not required in the input; values such as `example.com` are parsed as `http://example.com` for analysis.
 - The target website is not requested, crawled, or resolved.
@@ -133,7 +163,11 @@ Example response when the scan result is returned without a successful MongoDB s
   "explanations": {
     "reasons": [
       "No strong phishing indicators were found"
-    ]
+    ],
+    "analyzer_version": "phase1-heuristic/url-features-v1",
+    "network_accessed": false,
+    "brand_rules_version": "local-brand-rules-v1",
+    "brand_confusion": null
   }
 }
 ```
@@ -155,7 +189,7 @@ When persistence succeeds, the response may also contain:
 | --- | --- | --- |
 | `phishing` | High risk | Strong baseline indicators were present, or an optional model returned a positive label |
 | `suspicious` | Needs review | Some baseline indicators were present |
-| `legitimate` | Likely safe | No strong baseline indicators were found, or an optional model returned a negative label |
+| `legitimate` | No obvious structural red flags | No strong baseline indicators were found, or an optional model returned a negative label; this is not a safety guarantee |
 
 The verdict is an informational classifier output. It is not a safety guarantee, a block decision, or a threat-intelligence verdict.
 
@@ -166,10 +200,16 @@ The current response uses:
 ```json
 {
   "explanations": {
-    "reasons": ["...", "..."]
+    "reasons": ["...", "..."],
+    "analyzer_version": "phase1-heuristic/url-features-v1",
+    "network_accessed": false,
+    "brand_rules_version": "local-brand-rules-v1",
+    "brand_confusion": null
   }
 }
 ```
+
+`brand_confusion` is either `null` or an advisory object containing `detected`, `rule_version`, `brand`, `matched_label`, `hostname`, and `reason`. The rules are intentionally small and incomplete; they do not establish ownership, maliciousness, or safety. The hostname is parsed locally and the destination is never resolved or visited.
 
 The heuristic reasons can refer to the following signals:
 
@@ -181,6 +221,7 @@ The heuristic reasons can refer to the following signals:
 - Encoded characters.
 - Unusually long URL.
 - Several subdomains.
+- A locally configured brand-like hostname pattern, such as an explicit look-alike label or one-edit variation outside the listed official domains.
 
 When the optional model path is used, the current implementation returns `Optional trained model prediction` rather than feature-level model attribution.
 
@@ -208,7 +249,7 @@ The exact serializer wording is supplied by Django REST Framework and may vary w
 
 ## `GET /api/history/`
 
-Returns recent persisted scans. The service requests up to 20 records by default and orders MongoEngine records newest first.
+Returns recent persisted scans. The service requests up to `HISTORY_LIMIT` records (20 by default) and orders MongoEngine records newest first.
 
 ```bash
 curl http://127.0.0.1:8000/api/history/
@@ -234,11 +275,12 @@ If no records have been saved, or a forced diagnostic session cannot read MongoD
 
 ```json
 {
-  "results": []
+  "results": [],
+  "limit": 20
 }
 ```
 
-Normal startup requires MongoDB, while forced diagnostic sessions may return an empty history result when persistence is unavailable. The history response intentionally omits the stored feature and explanation dictionaries in the current Phase 1 endpoint.
+Normal startup requires MongoDB, while forced diagnostic sessions may return an empty history result when persistence is unavailable. The history response intentionally omits the stored feature and explanation dictionaries in the current Phase 1 endpoint. The `limit` field communicates the configured upper bound.
 
 ## Feature contract
 
@@ -248,9 +290,9 @@ The scan response includes the 20 keys listed in [ARCHITECTURE.md](./ARCHITECTUR
 
 | Variable | Default | Effect |
 | --- | --- | --- |
-| `MAX_URL_LENGTH` | `2048` | Shared documented URL limit; serializer currently enforces 2,048 directly |
+| `MAX_URL_LENGTH` | `2048` | Shared URL limit enforced by the serializer and service |
 | `MAX_BATCH_SIZE` | `25` | Reserved configuration; no batch endpoint exists in Phase 1 |
-| `HISTORY_LIMIT` | `20` | Configuration for intended history sizing; current service default is 20 |
+| `HISTORY_LIMIT` | `20` | Maximum number of records returned by the history service |
 | `API_ANON_RATE` | `60/min` | Anonymous request throttle |
 | `MONGODB_SERVER_SELECTION_TIMEOUT_MS` | `1000` | MongoDB server selection timeout |
 | `MONGODB_CONNECT_TIMEOUT_MS` | `1000` | MongoDB connection timeout |

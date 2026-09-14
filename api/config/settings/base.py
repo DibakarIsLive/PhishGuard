@@ -162,6 +162,13 @@ MAX_URL_LENGTH = int(os.getenv("MAX_URL_LENGTH", "2048"))
 MAX_BATCH_SIZE = int(os.getenv("MAX_BATCH_SIZE", "25"))
 HISTORY_LIMIT = int(os.getenv("HISTORY_LIMIT", "20"))
 
+if MAX_URL_LENGTH < 1:
+    raise ValueError("MAX_URL_LENGTH must be a positive integer")
+if MAX_BATCH_SIZE < 1:
+    raise ValueError("MAX_BATCH_SIZE must be a positive integer")
+if HISTORY_LIMIT < 1:
+    raise ValueError("HISTORY_LIMIT must be a positive integer")
+
 
 # -----------------------------------------------------------------------------
 # Logging

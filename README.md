@@ -25,11 +25,12 @@ The analyzer does **not** visit, crawl, resolve, or fetch submitted websites. It
 ## Current capabilities
 
 - Extracts 20 deterministic URL and hostname features without making outbound requests.
+- Applies a small, separate local brand-confusion ruleset for selected look-alike hostname patterns; this does not change the 20-feature model contract.
 - Reports one of three verdicts: `legitimate`, `suspicious`, or `phishing`.
-- Returns human-readable reasons for the heuristic result.
+- Returns human-readable reasons for the heuristic result, including an advisory brand-confusion reason when a configured local rule matches.
 - Uses the heuristic predictor by default.
 - Loads `api/ml-models/phishguard_model.joblib` when a compatible optional model artifact is present; a load or prediction failure falls back to the heuristic path.
-- Accepts one URL per scan request, with a 2,048-character serializer limit.
+- Accepts one URL per scan request, with a configurable `MAX_URL_LENGTH` limit (2,048 characters by default).
 - Stores scan history in MongoDB when the configured database is reachable and persistence succeeds.
 - Requires a reachable MongoDB server for normal Django development-server startup; use the explicit `--force` bypass only for diagnostics.
 - Provides a focused React/Vite interface for scanning, viewing explanations, and viewing saved history.
@@ -144,6 +145,7 @@ Override `MONGODB_URI` and `MONGODB_DATABASE` in `api/.env` when needed. The sta
 | ------ | --------------- | ----------------------------------------------------------- |
 | `GET`  | `/`             | Return service information and endpoint links               |
 | `GET`  | `/api/health/`  | Report API availability and the MongoDB startup requirement |
+| `GET`  | `/api/capabilities/` | Report Phase 1 limits and unavailable future capabilities |
 | `POST` | `/api/scan/`    | Analyze one URL                                             |
 | `GET`  | `/api/history/` | Return recent persisted scans                               |
 
@@ -213,6 +215,7 @@ python3 -m compileall -q api
 ## Limitations and safety boundary
 
 - URL analysis is lexical and hostname-based; it does not inspect HTML, forms, redirects, certificates, DNS, WHOIS data, page reputation, or live network behavior.
+- The local brand-confusion rules are intentionally small and incomplete. They are not proof of phishing, domain ownership, maliciousness, safety, or comprehensive typosquatting coverage.
 - A heuristic verdict is not a threat-intelligence lookup and can produce false positives or false negatives.
 - No accuracy, recall, precision, latency, or coverage target is asserted by the current repository.
 - The optional model artifact is not included, and the repository does not yet provide the dataset, training script, evaluation report, or artifact metadata needed to make model-quality claims.

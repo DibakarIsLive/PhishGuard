@@ -14,7 +14,7 @@ The current repository provides:
 
 - Django REST Framework API.
 - One-URL JSON scan endpoint.
-- 2,048-character input limit.
+- Configurable input limit (`MAX_URL_LENGTH`, 2,048 characters by default).
 - Network-free extraction of 20 URL and hostname features.
 - Heuristic verdicts: `legitimate`, `suspicious`, and `phishing`.
 - Human-readable fallback reasons.
@@ -33,10 +33,9 @@ The current repository provides:
 - Add a small, licensed, versioned evaluation dataset or a documented fixture set.
 - Define deterministic evaluation commands without claiming results before they are measured.
 - Add model-artifact metadata: feature order, training version, label mapping, and provenance.
-- Validate model artifacts before inference rather than relying only on runtime exceptions.
-- Add explicit tests for malformed URLs, whitespace normalization, and best-effort persistence behavior, including forced diagnostic sessions.
-- Clarify configuration variables that are currently reserved or only partially consumed.
-- Improve structured diagnostics for MongoDB connection and save failures.
+- Add a compatible model artifact and evaluate it against a documented fixture or licensed dataset.
+- Add a clean-environment reproduction run and deliberate MongoDB-backed smoke evidence.
+- Keep configuration examples, route references, and capability descriptions synchronized with observed behavior.
 
 ### Acceptance criteria
 

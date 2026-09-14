@@ -100,9 +100,9 @@ cp api/.env.example api/.env
 | `MONGODB_URI` | `mongodb://127.0.0.1:27017` | MongoDB server URI used by the startup check and persistence |
 | `MONGODB_DATABASE` | `phishguard` | MongoDB database used for scan history |
 | `API_ANON_RATE` | `60/min` | Anonymous API throttle |
-| `MAX_URL_LENGTH` | `2048` | Documented URL length setting |
+| `MAX_URL_LENGTH` | `2048` | Maximum URL length enforced by request validation and the analysis service |
 | `MAX_BATCH_SIZE` | `25` | Reserved for future batch work; no batch route exists |
-| `HISTORY_LIMIT` | `20` | Intended recent-history limit |
+| `HISTORY_LIMIT` | `20` | Maximum number of records returned by the history service |
 | `LOG_LEVEL` | `DEBUG` in the template | Console and file logging level |
 
 MongoDB timeout variables are also available in `.env.example`. Keep them bounded for local development so a stopped database does not cause long waits.
@@ -244,11 +244,11 @@ This is expected for normal startup. Start the MongoDB server configured by `MON
 
 ### Scan input is rejected
 
-Ensure the request contains one JSON string field named `url`, is no longer than 2,048 characters, and contains a usable domain. The service does not need a scheme, but it does need a parseable network location.
+Ensure the request contains one JSON string field named `url`, is no longer than the configured `MAX_URL_LENGTH` (2,048 characters by default), and contains a usable domain. The service does not need a scheme, but it does need a parseable network location. Internal whitespace, backslashes, unsupported schemes, invalid ports, and missing hostnames are rejected.
 
 ### The result is unexpected
 
-The current baseline only evaluates URL and hostname structure. It does not know whether a page is live, whether a domain is registered, or whether a URL appears in a reputation database. Review the returned features and reasons, then treat the verdict as a preliminary signal.
+The current baseline evaluates URL and hostname structure and applies a small local brand-confusion ruleset for selected look-alike labels. It does not know whether a page is live, whether a domain is registered, or whether a URL appears in a reputation database. Review the returned features, advisory metadata, and reasons, then treat the verdict as a preliminary signal; a brand match is not proof of phishing or domain ownership.
 
 ### The optional model is not used
 

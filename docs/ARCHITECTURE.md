@@ -17,7 +17,7 @@ This document describes the current Phase 1 implementation. It is intentionally 
 ┌──────────────────────────────────────────────────────────────┐
 │ Django REST API (`api/`)                                    │
 │ config/ · web_api/                                          │
-│ root · health · scan · history                              │
+│ root · health · capabilities · scan · history              │
 └──────────────────────────────┬───────────────────────────────┘
                                ▼
 ┌──────────────────────────────────────────────────────────────┐
@@ -50,11 +50,13 @@ PhishGuard/
 │   │   ├── settings/production.py   Explicit deployment requirements
 │   │   └── urls.py                  Root and `/api/` routing
 │   ├── url_analysis/
-│   │   ├── feature_extractor.py     20-feature URL contract
-│   │   ├── predictor.py              Optional model + heuristic fallback
+│   │   ├── feature_extractor.py     Versioned 20-feature URL contract
+│   │   ├── brand_confusion.py       Small local advisory hostname rules
+│   │   ├── predictor.py              Validated optional model + fallback
 │   │   ├── scan_service.py           Analysis and best-effort persistence
+│   │   ├── url_validation.py          Shared local URL validation
 │   │   ├── models.py                 MongoEngine `Scan` document
-│   │   └── database.py               Bounded MongoDB connection setup
+│   │   └── database.py               Bounded MongoDB diagnostics/setup
 │   ├── web_api/
 │   │   ├── serializers.py            Request validation
 │   │   ├── views.py                  HTTP views
@@ -86,21 +88,23 @@ PhishGuard/
 
 ### 2. Serializer validation
 
-`ScanView` passes request data to `ScanSerializer`. The serializer requires a character field named `url`, trims surrounding whitespace, and limits it to 2,048 characters.
+`ScanView` passes request data to `ScanSerializer`. The serializer requires a character field named `url`, trims surrounding whitespace, applies the configured `MAX_URL_LENGTH`, and uses the shared validator for supported schemes, hostnames, whitespace, backslashes, and ports.
 
 ### 3. Service validation and parsing
 
-`analyze_url()` trims the value and uses `urllib.parse.urlparse`. If the input has no scheme, `http://` is used for parsing purposes. A usable network location is required; invalid input produces a client error.
+`analyze_url()` normalizes the value and uses `urllib.parse.urlsplit`. If the input has no scheme, `http://` is used for parsing purposes. A usable network location is required; invalid input produces a client error.
 
 This normalization does not contact the hostname. It only makes parsing consistent for inputs such as `example.com`.
 
 ### 4. Feature extraction
 
-`extract_features()` analyzes the raw URL and parsed hostname. It returns a dictionary containing the stable feature contract documented below. The extractor performs no outbound I/O.
+`extract_features()` analyzes the raw URL and parsed hostname. It returns a dictionary containing the stable feature contract documented below. The extractor performs no outbound I/O. A separate `brand_confusion.py` check examines a small, explicit local ruleset and does not add a feature to this model vector.
 
 ### 5. Prediction
 
-`predict()` checks for `api/ml-models/phishguard_model.joblib`. If the artifact can be loaded and used with the documented feature order, its output can be used. Otherwise the predictor evaluates the transparent heuristic rules and returns a verdict, bounded confidence value, and reasons.
+`predict()` checks for `api/ml-models/phishguard_model.joblib`. Before using it, the predictor validates the feature count/order when metadata is exposed, the prediction shape and label, and the confidence range. If any compatibility check fails, the predictor logs a warning and evaluates the transparent heuristic rules instead.
+
+When the URL is available, the predictor also receives an advisory result from the small local brand-confusion ruleset. This signal can add a human-readable reason and heuristic weight, but it is separate from the 20-feature vector and does not override a compatible model's label. It covers only explicitly configured brands and simple ASCII look-alike patterns; it is not a complete typosquatting, ownership, reputation, or threat-intelligence service.
 
 ### 6. Response construction
 
@@ -111,6 +115,10 @@ The service returns:
 - `confidence`
 - `features`
 - `explanations.reasons`
+- `explanations.analyzer_version`
+- `explanations.network_accessed` (`false`)
+- `explanations.brand_rules_version`
+- `explanations.brand_confusion` (`null` or an advisory local-rule object)
 
 When MongoDB persistence succeeds, it also returns `id` and `created_at`.
 
@@ -161,6 +169,7 @@ The heuristic currently assigns weighted indicators to:
 - Percent-encoded characters.
 - URLs longer than 100 characters.
 - More than two subdomains.
+- A configured brand-like hostname pattern outside its configured official domains.
 
 The result categories are:
 
@@ -168,7 +177,7 @@ The result categories are:
 | --- | --- |
 | `phishing` | High risk |
 | `suspicious` | Needs review |
-| `legitimate` | Likely safe |
+| `legitimate` | No obvious structural red flags |
 
 These labels are preliminary signals. They do not establish that a website is malicious or safe.
 
@@ -201,10 +210,11 @@ See [DEVELOPMENT_GUIDE.md](./DEVELOPMENT_GUIDE.md) for setup and [API_REFERENCE.
 1. **Network-free analysis:** A scan must not load the submitted destination as a side effect of analysis.
 2. **Explicit startup dependency:** Normal backend startup requires MongoDB; `--force` is reserved for intentional diagnostics.
 3. **Best-effort persistence:** After startup, a failed MongoDB save must not make the lexical analysis result unusable.
-4. **Stable feature interface:** Feature names and order are explicit because optional model artifacts depend on them.
-5. **Small HTTP surface:** Phase 1 exposes only the routes required by the current frontend.
-6. **Explicit uncertainty:** Confidence is displayed as an application output, not presented as a validated probability.
-7. **JavaScript and JSX:** The web layer follows the repository convention and does not introduce TypeScript or TSX.
+4. **Stable feature interface:** Feature names, order, and version are explicit because optional model artifacts depend on them.
+5. **Visible capability boundary:** Health and capabilities responses describe the current implementation without pretending deferred features exist.
+6. **Small HTTP surface:** Phase 1 exposes only scan/history plus diagnostics needed for coordination.
+7. **Explicit uncertainty:** Confidence is displayed as an application output, not presented as a validated probability.
+8. **JavaScript and JSX:** The web layer follows the repository convention and does not introduce TypeScript or TSX.
 
 ## Related documents
 

@@ -6,7 +6,7 @@
 
 ## Abstract
 
-Phishing remains a practical cybersecurity problem because malicious links can imitate trusted services while using small structural changes to redirect or deceive users. PhishGuard is an academic and research-oriented full-stack application that studies this problem at the URL level. Its current Phase 1 implementation accepts one URL, extracts a stable set of 20 lexical and hostname features locally, produces an interpretable baseline verdict, and records the result in MongoDB when the configured database is reachable. Normal backend startup validates MongoDB reachability first. A Django REST API exposes the analysis service and a React interface provides the user workflow.
+Phishing remains a practical cybersecurity problem because malicious links can imitate trusted services while using small structural changes to redirect or deceive users. PhishGuard is an academic and research-oriented full-stack application that studies this problem at the URL level. Its current Phase 1 implementation accepts one URL, extracts a stable set of 20 lexical and hostname features locally, applies a small advisory brand-confusion ruleset separately from that feature vector, produces an interpretable baseline verdict, and records the result in MongoDB when the configured database is reachable. Normal backend startup validates MongoDB reachability first. A Django REST API exposes the analysis service and a React interface provides the user workflow.
 
 The application deliberately does not visit or crawl submitted websites. It therefore demonstrates a safe and inspectable baseline rather than complete website classification. The current predictor is heuristic by default, with an optional compatible `joblib` model artifact boundary. No accuracy or production-security claim is made without a reproducible dataset, training process, evaluation report, and operational evidence.
 
@@ -24,7 +24,7 @@ The Phase 1 research problem is:
 
 > How can a compact, network-free service extract transparent URL and hostname signals and return a useful preliminary phishing-oriented verdict for one submitted URL?
 
-The project does not attempt to answer whether a live website is safe in every context. It does not inspect page content, follow redirects, validate certificates, query reputation providers, or infer the intent of a website from behavior that is unavailable in the URL string.
+The project does not attempt to answer whether a live website is safe in every context. It does not inspect page content, follow redirects, validate certificates, query reputation providers, or infer the intent of a website from behavior that is unavailable in the URL string. Its small local brand rules can highlight only selected simple look-alike hostname patterns; they are not a complete typosquatting or threat-intelligence system.
 
 ## 3. Aim and objectives
 
@@ -54,6 +54,7 @@ To implement and document a reproducible baseline workflow for URL-level phishin
 - Maximum submitted URL length of 2,048 characters.
 - Local parsing of URL and hostname components.
 - Stable extraction of 20 features.
+- Separate advisory checks for a small configured set of brand-like hostname patterns.
 - Transparent heuristic prediction.
 - Optional loading of a compatible `api/ml-models/phishguard_model.joblib` artifact.
 - JSON endpoints for root information, health, scanning, and history.
@@ -66,6 +67,7 @@ To implement and document a reproducible baseline workflow for URL-level phishin
 
 - Live HTTP requests or website crawling.
 - HTML, DOM, form, JavaScript, redirect, certificate, DNS, WHOIS, or reputation analysis.
+- Comprehensive brand, typosquatting, domain-ownership, or threat-intelligence coverage.
 - Claimed accuracy, recall, precision, F1-score, or latency targets.
 - A bundled model, dataset, training command, or evaluation report.
 - SHAP, ensemble voting, or multiple advanced model frameworks.
@@ -95,7 +97,7 @@ The feature extractor evaluates the input string and its parsed hostname without
 - Redirect-symbol detection.
 - Encoded-character detection.
 
-The order and names of these features are treated as an interface because an optional model artifact may depend on them.
+The order and names of these features are treated as an interface because an optional model artifact may depend on them. The local brand-confusion result is deliberately kept outside this dictionary so the `url-features-v1` model contract remains unchanged.
 
 ### 5.3 Prediction
 
@@ -104,7 +106,7 @@ The predictor has two paths:
 1. **Optional model path:** If a compatible joblib artifact exists and can produce a valid result, the predictor may use it.
 2. **Heuristic path:** Otherwise, transparent indicators contribute to a bounded score that maps to `legitimate`, `suspicious`, or `phishing`.
 
-The fallback reasons are returned in plain language so that a reviewer can connect the verdict to observable URL properties. Confidence is an application output used for presentation; it is not evidence of validated statistical calibration.
+The fallback reasons are returned in plain language so that a reviewer can connect the verdict to observable URL properties. A matching local brand rule can contribute an advisory reason and heuristic weight; it is not proof that the domain is malicious. Confidence is an application output used for presentation; it is not evidence of validated statistical calibration.
 
 ### 5.4 Persistence
 
@@ -112,7 +114,7 @@ After startup validation, the service can save a `Scan` document through MongoEn
 
 ### 5.5 User interface
 
-The React/Vite frontend submits one URL to the API and displays the returned verdict, confidence, URL, and explanation reasons. It also requests recent history and shows a clear message when no saved records are available. The interface explicitly states that the submitted website is not visited during analysis.
+The React/Vite frontend submits one URL to the API and displays the returned verdict, confidence, URL, and explanation reasons. It also requests recent history and shows a clear message when no saved records are available. The interface uses structural wording for a low-signal result rather than presenting it as proof that a URL is safe, and it explicitly states that the submitted website is not visited during analysis.
 
 ## 6. System architecture
 
@@ -139,7 +141,7 @@ The architecture has a deliberate boundary between startup validation, analysis,
 
 A successful scan response contains the submitted URL, a supported verdict, a confidence value bounded between 0 and 1, an explanation object, and the extracted feature values. The exact JSON shape is documented in [API_REFERENCE.md](./API_REFERENCE.md).
 
-The system should be evaluated by behavior and reproducibility rather than by an invented performance number. A future evaluation must identify its dataset, split strategy, feature version, model artifact, metrics, and execution environment.
+The system should be evaluated by behavior and reproducibility rather than by an invented performance number. A future evaluation must identify its dataset, split strategy, feature version, model artifact, metrics, and execution environment. Brand-confusion tests should separately report the local ruleset version, configured brands, matched patterns, and known omissions.
 
 ## 8. Educational value
 
