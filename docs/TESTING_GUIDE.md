@@ -136,12 +136,12 @@ When MongoDB is available:
 
 Persistence is best-effort after startup. A failed save should not be treated as a failed lexical analysis response, particularly during an explicit forced diagnostic session.
 
-## Frontend checks
+## UI checks
 
-The current frontend has no separate unit-test script. Use the build and manual workflow:
+The current UI has no separate unit-test script. Use the build and manual workflow:
 
 ```bash
-cd web
+cd ui
 npm install
 npm run build
 make dev
@@ -192,4 +192,4 @@ For a feature-contract change, update at minimum:
 
 ## Future testing scope
 
-Future phases may add integration tests with a controlled MongoDB service, frontend component tests, model evaluation tests, property-based URL inputs, load tests, and security tests. Those should be introduced with explicit fixtures, boundaries, and evidence rather than implied by the current baseline suite.
+Future phases may add integration tests with a controlled MongoDB service, UI component tests, model evaluation tests, property-based URL inputs, load tests, and security tests. Those should be introduced with explicit fixtures, boundaries, and evidence rather than implied by the current baseline suite.

@@ -9,15 +9,15 @@ PhishGuard is an academic and research-oriented URL analysis project. Contributi
 1. Read the relevant document in `docs/`.
 2. Check the current implementation and tests.
 3. Confirm that the change stays within the requested scope.
-4. Keep the API, analyzer, frontend, and documentation contracts synchronized.
+4. Keep the API, analyzer, UI, and documentation contracts synchronized.
 
 ## Repository conventions
 
 - Use `api/` for Django and analysis code.
-- Use `web/` for React source.
+- Use `ui/` for React source.
 - Use lowercase `public/` assets.
 - Use Python `snake_case` for Python files, functions, and variables.
-- Use JavaScript and JSX only in the frontend.
+- Use JavaScript and JSX only in the UI.
 - Keep generated files, local environments, logs, datasets, and model artifacts ignored.
 - Preserve the network-free scan boundary unless a separately reviewed feature changes it.
 
@@ -68,7 +68,7 @@ Reviewers should be able to answer:
 - What behavior changed?
 - Which tests prove it?
 - Does the API response contract remain compatible?
-- Does the frontend still use JavaScript and JSX?
+- Does the UI still use JavaScript and JSX?
 - Does the change make any network request that was not previously made?
 - Are claims in `README.md` and `docs/` supported by the repository?
 - Are secrets or generated artifacts absent?

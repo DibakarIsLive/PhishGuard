@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help install setup-env dev dev-tabs dev-single api-only web-only api ui build check test test-features test-api doctor health status clean-cache clean stop ci
+.PHONY: help install setup-env dev dev-tabs dev-single api-only ui-only api ui build check test test-features test-api doctor health status clean-cache clean stop ci mi md msetup mapi mui mb mcheck mt mfeatures mtest-api mci mdoctor mhealth mstatus mcache mc mstop
 
 API_PORT ?= 8000
 WEB_PORT ?= 5173
@@ -30,34 +30,52 @@ help:
 	@printf '$(CYAN)│  🛡️  $(PROJECT)  ·  full-stack command center               │$(RESET)\n'
 	@printf '$(CYAN)╰────────────────────────────────────────────────────────────╯$(RESET)\n'
 	@printf '\n$(BOLD)Quick start$(RESET)\n'
-	@printf '  $(GREEN)make install$(RESET)       Prepare API and web\n'
-	@printf '  $(GREEN)make dev$(RESET)           Launch API + web in Terminal tabs\n'
+	@printf '  $(GREEN)make install$(RESET)       Prepare API and UI\n'
+	@printf '  $(GREEN)make dev$(RESET)           Launch API + UI in Terminal tabs\n'
 	@printf '  $(GREEN)make doctor$(RESET)        Inspect the local development setup\n'
 	@printf '\n$(BOLD)Run$(RESET)\n'
-	@printf '  $(CYAN)dev$(RESET)               Start API + web in tabs\n'
+	@printf '  $(CYAN)dev$(RESET)               Start API + UI in tabs\n'
 	@printf '  $(CYAN)dev-single$(RESET)        Start both services in one terminal\n'
 	@printf '  $(CYAN)api-only$(RESET)         Start only the Django API\n'
-	@printf '  $(CYAN)web-only$(RESET)         Start only the React web app\n'
+	@printf '  $(CYAN)ui-only$(RESET)          Start only the React UI\n'
 	@printf '  $(CYAN)api$(RESET)               Shortcut for api-only\n'
-	@printf '  $(CYAN)ui$(RESET)                Shortcut for web-only\n'
+	@printf '  $(CYAN)ui$(RESET)                Shortcut for ui-only\n'
 	@printf '\n$(BOLD)Quality$(RESET)\n'
-	@printf '  $(CYAN)build$(RESET)             Build the web\n'
+	@printf '  $(CYAN)build$(RESET)             Build the UI\n'
 	@printf '  $(CYAN)check$(RESET)             Run API/Django checks\n'
 	@printf '  $(CYAN)test$(RESET)              Run all API tests\n'
 	@printf '  $(CYAN)test-features$(RESET)    Test URL feature extraction\n'
 	@printf '  $(CYAN)test-api$(RESET)          Test API/service behavior\n'
-	@printf '  $(CYAN)ci$(RESET)                Run checks, tests, and web build\n'
+	@printf '  $(CYAN)ci$(RESET)                Run checks, tests, and UI build\n'
 	@printf '\n$(BOLD)Inspect & clean$(RESET)\n'
 	@printf '  $(CYAN)health$(RESET)            Check API availability\n'
-	@printf '  $(CYAN)status$(RESET)            Show API/web status\n'
+	@printf '  $(CYAN)status$(RESET)            Show API/UI status\n'
 	@printf '  $(CYAN)clean-cache$(RESET)      Remove generated caches\n'
 	@printf '  $(CYAN)clean$(RESET)             Remove local dependencies and caches\n'
 	@printf '  $(CYAN)stop$(RESET)              Stop local development servers\n\n'
+	@printf '$(BOLD)Shortcuts$(RESET)\n'
+	@printf '  $(CYAN)mi$(RESET)                = make install\n'
+	@printf '  $(CYAN)md$(RESET)                = make dev\n'
+	@printf '  $(CYAN)msetup$(RESET)            = make setup-env\n'
+	@printf '  $(CYAN)mapi$(RESET)             = make api-only\n'
+	@printf '  $(CYAN)mui$(RESET)              = make ui-only\n'
+	@printf '  $(CYAN)mb$(RESET)                = make build\n'
+	@printf '  $(CYAN)mcheck$(RESET)            = make check\n'
+	@printf '  $(CYAN)mt$(RESET)                = make test\n'
+	@printf '  $(CYAN)mfeatures$(RESET)         = make test-features\n'
+	@printf '  $(CYAN)mtest-api$(RESET)          = make test-api\n'
+	@printf '  $(CYAN)mci$(RESET)               = make ci\n'
+	@printf '  $(CYAN)mdoctor$(RESET)           = make doctor\n'
+	@printf '  $(CYAN)mhealth$(RESET)           = make health\n'
+	@printf '  $(CYAN)mstatus$(RESET)           = make status\n'
+	@printf '  $(CYAN)mcache$(RESET)            = make clean-cache\n'
+	@printf '  $(CYAN)mc$(RESET)                = make clean\n'
+	@printf '  $(CYAN)mstop$(RESET)             = make stop\n\n'
 
 install:
 	@printf '\n$(MAGENTA)✦$(RESET) $(BOLD)Bootstrapping PhishGuard$(RESET)\n'
 	@$(MAKE) -C api install
-	@$(MAKE) -C web install
+	@$(MAKE) -C ui install
 	@printf '$(GREEN)✔ All dependencies are ready. Happy building! 🚀$(RESET)\n\n'
 
 setup-env:
@@ -67,9 +85,9 @@ dev: dev-tabs
 
 dev-tabs:
 	@if [ "$$(uname)" = "Darwin" ]; then \
-		printf '$(CYAN)✦ Opening API and web in separate Terminal windows...$(RESET)\n'; \
+		printf '$(CYAN)✦ Opening API and UI in separate Terminal windows...$(RESET)\n'; \
 		osascript -e 'tell application "Terminal" to do script "cd \"$(CURDIR)/api\" && make dev FORCE=$(FORCE)"' >/dev/null; \
-		osascript -e 'tell application "Terminal" to do script "cd \"$(CURDIR)/web\" && make dev PORT=$(WEB_PORT)"' >/dev/null; \
+		osascript -e 'tell application "Terminal" to do script "cd \"$(CURDIR)/ui\" && make dev PORT=$(WEB_PORT)"' >/dev/null; \
 		printf '$(GREEN)✔ Development cockpit launched.$(RESET)\n'; \
 	else \
 		printf '$(YELLOW)Tabs are macOS-specific; switching to one-terminal mode.$(RESET)\n'; \
@@ -77,17 +95,17 @@ dev-tabs:
 	fi
 
 dev-single:
-	@printf '$(MAGENTA)✦ Starting API + web — press Ctrl-C to stop$(RESET)\n'
-	@trap 'kill 0' INT TERM; (cd api && $(MAKE) dev FORCE=$(FORCE) PORT=$(API_PORT)) & (cd web && $(MAKE) dev PORT=$(WEB_PORT)) & wait
+	@printf '$(MAGENTA)✦ Starting API + UI — press Ctrl-C to stop$(RESET)\n'
+	@trap 'kill 0' INT TERM; (cd api && $(MAKE) dev FORCE=$(FORCE) PORT=$(API_PORT)) & (cd ui && $(MAKE) dev PORT=$(WEB_PORT)) & wait
 
 api-only api:
 	@$(MAKE) -C api dev FORCE=$(FORCE) PORT=$(API_PORT)
 
-web-only ui:
-	@$(MAKE) -C web dev PORT=$(WEB_PORT)
+ui-only ui:
+	@$(MAKE) -C ui dev PORT=$(WEB_PORT)
 
 build:
-	@$(MAKE) -C web build
+	@$(MAKE) -C ui build
 
 check:
 	@$(MAKE) -C api check
@@ -117,21 +135,21 @@ doctor:
 	@printf '  .env:      '; test -f api/.env && printf '$(GREEN)✔ present$(RESET)\n' || printf '$(YELLOW)○ missing — run make setup-env$(RESET)\n'
 
 health:
-	@$(MAKE) -C web health
+	@$(MAKE) -C ui health
 
 status:
 	@printf '\n$(BOLD)$(CYAN)📡 Service status$(RESET)\n'
 	@$(MAKE) -C api status
-	@$(MAKE) -C web status
+	@$(MAKE) -C ui status
 
 clean-cache:
 	@$(MAKE) -C api clean-cache
-	@$(MAKE) -C web clean-cache
+	@$(MAKE) -C ui clean-cache
 
 clean:
-	@printf '$(YELLOW)⚠ Removes api/.venv, web/node_modules, and package-lock.json.$(RESET)\n'
+	@printf '$(YELLOW)⚠ Removes api/.venv, ui/node_modules, and package-lock.json.$(RESET)\n'
 	@$(MAKE) -C api clean
-	@$(MAKE) -C web clean
+	@$(MAKE) -C ui clean
 
 stop:
 	@pkill -f "manage.py runserver" 2>/dev/null || true
@@ -139,3 +157,22 @@ stop:
 	@lsof -ti:$(API_PORT) | xargs kill 2>/dev/null || true
 	@lsof -ti:$(WEB_PORT) | xargs kill 2>/dev/null || true
 	@printf '$(GREEN)✔ Development servers stopped. Terminal is calm again.$(RESET)\n'
+
+# Short aliases keep common commands fast without duplicating their recipes.
+mi: install
+md: dev
+msetup: setup-env
+mapi: api-only
+mui: ui-only
+mb: build
+mcheck: check
+mt: test
+mfeatures: test-features
+mtest-api: test-api
+mci: ci
+mdoctor: doctor
+mhealth: health
+mstatus: status
+mcache: clean-cache
+mc: clean
+mstop: stop

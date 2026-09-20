@@ -2,7 +2,7 @@
 
 > A single-glance team reference for the verified Phase 1 backend, its deliberate boundaries, and the work that remains before Phase 2 research.
 >
-> **Frontend rule:** React + JavaScript + JSX only. TypeScript and TSX are not part of this project convention.
+> **UI rule:** React + JavaScript + JSX only. TypeScript and TSX are not part of this project convention.
 
 ## Current position
 
@@ -119,7 +119,7 @@ Replace `Unassigned` with names when work is distributed. A status applies to th
 | --- | --- | --- | --- |
 | Backend, API, and MongoDB | ✅ Baseline complete | Unassigned | Finish Phase 1.1 edge-case tests, persistence tests, and diagnostics. |
 | URL analysis and ML research | 🟡 Phase 1.1 next | Unassigned | Define the fixture/evaluation path and the model-artifact contract before Phase 2 training. |
-| React + JavaScript + JSX frontend | ✅ Baseline complete | Unassigned | Preserve the JSX-only architecture, verify the API workflow, and collect UI evidence. |
+| React + JavaScript + JSX UI | ✅ Baseline complete | Unassigned | Preserve the JSX-only architecture, verify the API workflow, and collect UI evidence. |
 | QA and verification | 🟡 Ongoing | Unassigned | Re-run checks from a clean setup and record reproducible evidence. |
 | Documentation and academic reporting | 🟡 Ongoing | Unassigned | Keep current behavior, limitations, roadmap, and examples synchronized. |
 | Project integration / review | 🟡 Required | Unassigned | Assign owners, review exit gates, and prevent planned features from being presented as implemented. |

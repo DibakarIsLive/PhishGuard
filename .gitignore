@@ -217,9 +217,9 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# Web app
-web/node_modules/
-web/dist/
+# UI dependencies and build output
+ui/node_modules/
+ui/dist/
 
 # PhishGuard local data and model artifacts
 api/data/raw/*

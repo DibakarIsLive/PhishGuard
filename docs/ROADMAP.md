@@ -75,7 +75,7 @@ Possible work includes:
 - Batch scanning with explicit resource and abuse controls.
 - Export of authorized analysis records.
 - Better user-facing explanation presentation.
-- Frontend component and integration tests.
+- UI component and integration tests.
 
 These features should not be added merely because configuration placeholders exist. Each requires a defined API contract, tests, privacy considerations, and documentation.
 

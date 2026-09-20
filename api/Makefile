@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help install setup-env dev runserver check test test-features test-api shell status clean clean-cache freeze outdated security-check format compile urls ping train-info
+.PHONY: help install setup-env dev runserver check test test-features test-api shell status clean clean-cache freeze outdated security-check format compile urls ping train-info mi md msetup mt mcheck mfeatures mtest-api mshell murls mping mcompile mdoctor mstatus mcache mc mfreeze moutdated msecurity mformat
 
 PYTHON ?= python3
 VENV ?= .venv
@@ -55,6 +55,26 @@ help:
 	@printf '  $(CYAN)outdated$(RESET)          List outdated packages\n'
 	@printf '  $(CYAN)security-check$(RESET)   Validate installed dependencies\n'
 	@printf '  $(CYAN)clean$(RESET)             Remove caches and .venv\n\n'
+	@printf '$(BOLD)Shortcuts$(RESET)\n'
+	@printf '  $(CYAN)mi$(RESET)                = make install\n'
+	@printf '  $(CYAN)md$(RESET)                = make dev\n'
+	@printf '  $(CYAN)msetup$(RESET)            = make setup-env\n'
+	@printf '  $(CYAN)mcheck$(RESET)            = make check\n'
+	@printf '  $(CYAN)mt$(RESET)                = make test\n'
+	@printf '  $(CYAN)mfeatures$(RESET)         = make test-features\n'
+	@printf '  $(CYAN)mtest-api$(RESET)          = make test-api\n'
+	@printf '  $(CYAN)mshell$(RESET)             = make shell\n'
+	@printf '  $(CYAN)murls$(RESET)              = make urls\n'
+	@printf '  $(CYAN)mping$(RESET)              = make ping\n'
+	@printf '  $(CYAN)mcompile$(RESET)           = make compile\n'
+	@printf '  $(CYAN)mdoctor$(RESET)            = make doctor\n'
+	@printf '  $(CYAN)mstatus$(RESET)            = make status\n'
+	@printf '  $(CYAN)mcache$(RESET)             = make clean-cache\n'
+	@printf '  $(CYAN)mc$(RESET)                = make clean\n'
+	@printf '  $(CYAN)mfreeze$(RESET)            = make freeze\n'
+	@printf '  $(CYAN)moutdated$(RESET)          = make outdated\n'
+	@printf '  $(CYAN)msecurity$(RESET)          = make security-check\n'
+	@printf '  $(CYAN)mformat$(RESET)            = make format\n\n'
 
 $(PY):
 	@printf '$(MAGENTA)✦ Creating API virtual environment...$(RESET)\n'
@@ -150,4 +170,25 @@ outdated: $(PY)
 
 security-check: $(PY)
 	@$(PIP) check
-	@printf '$(GREEN)✔ Python dependency check passed.$(RESET)\n'
+		@printf '$(GREEN)✔ Python dependency check passed.$(RESET)\n'
+
+# Short aliases keep common API commands fast without duplicating recipes.
+mi: install
+md: dev
+msetup: setup-env
+mcheck: check
+mt: test
+mfeatures: test-features
+mtest-api: test-api
+mshell: shell
+murls: urls
+mping: ping
+mcompile: compile
+mdoctor: doctor
+mstatus: status
+mcache: clean-cache
+mc: clean
+mfreeze: freeze
+moutdated: outdated
+msecurity: security-check
+mformat: format

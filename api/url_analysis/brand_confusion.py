@@ -10,7 +10,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from urllib.parse import urlsplit
 
-
 BRAND_RULES_VERSION = "local-brand-rules-v1"
 
 

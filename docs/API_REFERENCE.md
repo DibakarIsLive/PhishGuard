@@ -7,7 +7,7 @@ Local development uses:
 - API root: `http://127.0.0.1:8000`
 - API namespace: `http://127.0.0.1:8000/api`
 
-The web client calls the API namespace. Set `VITE_API_BASE_URL` when the API is hosted elsewhere.
+The UI client calls the API namespace. Set `VITE_API_BASE_URL` when the API is hosted elsewhere.
 
 ## Response conventions
 
@@ -83,7 +83,7 @@ A successful health response means that Django can serve the endpoint. It does n
 
 ## `GET /api/capabilities/`
 
-Returns the implemented Phase 1 boundary, configuration limits, persistence mode, optional model state, and explicitly unavailable future features. This endpoint is intended for local development and frontend coordination; it is not an authorization or feature-flag system.
+Returns the implemented Phase 1 boundary, configuration limits, persistence mode, optional model state, and explicitly unavailable future features. This endpoint is intended for local development and UI coordination; it is not an authorization or feature-flag system.
 
 ```bash
 curl http://127.0.0.1:8000/api/capabilities/

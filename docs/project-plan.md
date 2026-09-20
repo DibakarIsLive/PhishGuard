@@ -20,7 +20,7 @@ This boundary keeps the first implementation understandable and prevents unsuppo
 
 ### 3.1 Required objectives
 
-- [x] Establish a repository layout with `api/`, `web/`, `public/`, and `docs/`.
+- [x] Establish a repository layout with `api/`, `ui/`, `public/`, and `docs/`.
 - [x] Provide Django 4.2 and Django REST Framework configuration under `api/config/`.
 - [x] Provide a single-URL `POST /api/scan/` endpoint.
 - [x] Validate one trimmed URL string with a maximum length of 2,048 characters.
@@ -35,7 +35,7 @@ This boundary keeps the first implementation understandable and prevents unsuppo
 - [x] Provide an explicit `--force`/`FORCE=1` diagnostic bypass for startup without MongoDB.
 - [x] Persist scan records through MongoEngine when MongoDB is available.
 - [x] Keep forced-session analysis usable when a persistence operation fails.
-- [x] Provide a React/Vite frontend using JavaScript and JSX only.
+- [x] Provide a React/Vite UI using JavaScript and JSX only.
 - [x] Provide local development, check, test, and build commands.
 
 ### 3.2 Explicit non-goals for Phase 1
@@ -122,7 +122,7 @@ The MongoEngine `Scan` document stores:
 
 Normal backend startup requires a bounded MongoDB reachability check. An explicit `--force`/`FORCE=1` diagnostic bypass can start the API without MongoDB; after startup, connection or save operations remain best-effort, so a failed save does not invalidate the lexical analysis response and history may be empty.
 
-### 4.5 Web layer
+### 4.5 UI layer
 
 The React interface provides:
 
@@ -132,7 +132,7 @@ The React interface provides:
 - A recent-history list when MongoDB has saved records.
 - A visible notice that analysis does not visit the submitted website.
 
-The frontend uses JavaScript, JSX, React, React DOM, Vite, and the browser Fetch API. TypeScript and TSX are outside the project convention.
+The UI uses JavaScript, JSX, React, React DOM, Vite, and the browser Fetch API. TypeScript and TSX are outside the project convention.
 
 ## 5. Work breakdown
 
@@ -142,11 +142,11 @@ The frontend uses JavaScript, JSX, React, React DOM, Vite, and the browser Fetch
 
 Tasks:
 
-- Maintain the `api/`, `web/`, `public/`, and `docs/` boundaries.
+- Maintain the `api/`, `ui/`, `public/`, and `docs/` boundaries.
 - Keep environment-specific settings in `api/config/settings/`.
 - Keep secrets and local generated data out of version control.
 - Keep Python modules and variables in `snake_case`.
-- Keep frontend source in JavaScript and JSX.
+- Keep UI source in JavaScript and JSX.
 
 Acceptance criteria:
 
@@ -173,7 +173,7 @@ Acceptance criteria:
 
 ### Workstream C — REST API
 
-**Outcome:** A small HTTP contract suitable for the Phase 1 web client.
+**Outcome:** A small HTTP contract suitable for the Phase 1 UI client.
 
 Tasks:
 
@@ -223,10 +223,10 @@ Tasks:
 
 Acceptance criteria:
 
-- `npm run build` succeeds in `web/`.
+- `npm run build` succeeds in `ui/`.
 - The default API base URL is documented.
 - A non-default API URL can be supplied with `VITE_API_BASE_URL`.
-- `make dev` opens the configured frontend URL automatically; `PORT` changes both the Vite port and opened URL.
+- `make dev` opens the configured UI URL automatically; `PORT` changes both the Vite port and opened URL.
 - Backend startup never opens a browser tab.
 
 ### Workstream F — Verification and documentation
@@ -237,7 +237,7 @@ Tasks:
 
 - Maintain focused API tests.
 - Compile-check Python sources.
-- Build the frontend.
+- Build the UI.
 - Keep endpoint and feature documentation synchronized with code.
 - Record limitations instead of converting future work into present claims.
 
@@ -255,10 +255,10 @@ git diff --check
 
 1. Confirm the repository structure and local prerequisites.
 2. Create `api/.env` from `.env.example` and review local values.
-3. Install API and web dependencies.
+3. Install API and UI dependencies.
 4. Run the API checks and focused tests.
 5. Start the API and verify `/api/health/`.
-6. Start the web client and submit representative URLs.
+6. Start the UI client and submit representative URLs.
 7. Verify that normal startup refuses to proceed with MongoDB stopped.
 8. Use `--force` only for an intentional diagnostic run and verify that lexical analysis can still return when persistence is unavailable.
 9. Run with MongoDB available to verify history persistence.
@@ -269,13 +269,13 @@ git diff --check
 
 ### Phase 1 implementation
 
-- [x] API and web directories use the current naming convention.
+- [x] API and UI directories use the current naming convention.
 - [x] Lowercase branding assets are used by the current documentation.
 - [x] URL analysis is network-free.
 - [x] Feature extraction and heuristic prediction are implemented.
 - [x] Optional model loading is isolated from the default fallback.
 - [x] Normal backend startup requires MongoDB, with an explicit force bypass for diagnostics and bounded persistence behavior.
-- [x] The web client uses React JavaScript and JSX.
+- [x] The UI client uses React JavaScript and JSX.
 - [x] Local commands and environment variables are documented.
 
 ### Evidence to collect for an academic submission

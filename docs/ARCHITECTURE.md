@@ -9,7 +9,7 @@ This document describes the current Phase 1 implementation. It is intentionally 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
 │ Browser                                                      │
-│ React + Vite + JavaScript/JSX (`web/`)                      │
+│ React + Vite + JavaScript/JSX (`ui/`)                      │
 │ ScanForm · ResultCard · HistoryList                         │
 └──────────────────────────────┬───────────────────────────────┘
                                │ JSON over HTTP
@@ -67,7 +67,7 @@ PhishGuard/
 │   ├── logs/                         Runtime logs
 │   ├── manage.py
 │   └── requirements.txt
-├── web/
+├── ui/
 │   ├── src/components/              UI components
 │   ├── src/hooks/                   Scan state hook
 │   ├── src/services/                Fetch API client
@@ -84,7 +84,7 @@ PhishGuard/
 
 ### 1. Browser request
 
-`ScanForm.jsx` submits one URL through `scanUrl()` in `web/src/services/api-client.js`. The client sends JSON to `${VITE_API_BASE_URL}/scan/`. The default base URL is `http://localhost:8000/api`.
+`ScanForm.jsx` submits one URL through `scanUrl()` in `ui/src/services/api-client.js`. The client sends JSON to `${VITE_API_BASE_URL}/scan/`. The default base URL is `http://localhost:8000/api`.
 
 ### 2. Serializer validation
 
@@ -201,7 +201,7 @@ MongoDB is required for normal backend startup in Phase 1. The Django relational
 - `DJANGO_ENV=development` selects local settings and allows the documented local hosts/origins.
 - `DJANGO_ENV=production` requires an explicit `SECRET_KEY`, `ALLOWED_HOSTS`, and `CORS_ALLOWED_ORIGINS`, and enables HTTPS-oriented settings.
 - `MONGODB_*` values configure the startup reachability check, MongoEngine history persistence, and bounded timeouts.
-- `VITE_API_BASE_URL` points the web client at the API.
+- `VITE_API_BASE_URL` points the UI client at the API.
 
 See [DEVELOPMENT_GUIDE.md](./DEVELOPMENT_GUIDE.md) for setup and [API_REFERENCE.md](./API_REFERENCE.md) for the HTTP contract.
 
@@ -214,7 +214,7 @@ See [DEVELOPMENT_GUIDE.md](./DEVELOPMENT_GUIDE.md) for setup and [API_REFERENCE.
 5. **Visible capability boundary:** Health and capabilities responses describe the current implementation without pretending deferred features exist.
 6. **Small HTTP surface:** Phase 1 exposes only scan/history plus diagnostics needed for coordination.
 7. **Explicit uncertainty:** Confidence is displayed as an application output, not presented as a validated probability.
-8. **JavaScript and JSX:** The web layer follows the repository convention and does not introduce TypeScript or TSX.
+8. **JavaScript and JSX:** The UI layer follows the repository convention and does not introduce TypeScript or TSX.
 
 ## Related documents
 

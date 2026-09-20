@@ -6,7 +6,7 @@
 - Treat the analyzer as a network-free academic tool.
 - Treat MongoDB as required for normal backend development startup; use the explicit force bypass only for diagnostics.
 - Use Python `snake_case` for Python modules, functions, and variables.
-- Keep the frontend in React, JavaScript, and JSX; do not introduce TypeScript or TSX.
+- Keep the UI in React, JavaScript, and JSX; do not introduce TypeScript or TSX.
 - Do not commit secrets, local environments, generated builds, logs, datasets, or model artifacts.
 - Document future work as future work until it is implemented and verified.
 
@@ -29,14 +29,14 @@ make install
 make setup-env
 ```
 
-The API install target creates `api/.venv`, installs `api/requirements.txt`, and creates `api/.env` from `api/.env.example` when it does not already exist. The web install target runs `npm install` in `web/`.
+The API install target creates `api/.venv`, installs `api/requirements.txt`, and creates `api/.env` from `api/.env.example` when it does not already exist. The UI install target runs `npm install` in `ui/`.
 
 Inspect the local setup:
 
 ```bash
 make doctor
 make -C api doctor
-make -C web doctor
+make -C ui doctor
 ```
 
 ## Start the application
@@ -47,7 +47,7 @@ make -C web doctor
 make dev
 ```
 
-The root target opens the API and web development servers in separate Terminal sessions. The web target automatically opens its configured Vite URL in the default browser; the API target does not open a browser tab.
+The root target opens the API and UI development servers in separate Terminal sessions. The UI target automatically opens its configured Vite URL in the default browser; the API target does not open a browser tab.
 
 ### One terminal or non-macOS
 
@@ -66,10 +66,10 @@ make dev
 
 Normal API startup requires reachable MongoDB. To intentionally run a diagnostic session without MongoDB, use `python3 manage.py runserver --force` or `make dev FORCE=1`.
 
-Web:
+UI:
 
 ```bash
-cd web
+cd ui
 make dev
 ```
 
@@ -77,7 +77,7 @@ Local addresses:
 
 - API root: `http://127.0.0.1:8000/`
 - API namespace: `http://127.0.0.1:8000/api/`
-- Web client: `http://localhost:5173/`
+- UI client: `http://localhost:5173/`
 
 ## Environment configuration
 
@@ -118,9 +118,9 @@ Set `DJANGO_ENV=production` only when the deployment environment provides:
 
 The production settings file is configuration hardening, not evidence that the application is production-ready as a security product.
 
-## Frontend API configuration
+## UI API configuration
 
-The web client reads:
+The UI client reads:
 
 ```text
 VITE_API_BASE_URL
@@ -132,10 +132,10 @@ When omitted, it uses:
 http://localhost:8000/api
 ```
 
-For a different local API address, use the web Makefile; it still opens the configured frontend URL automatically:
+For a different local API address, use the UI Makefile; it still opens the configured UI URL automatically:
 
 ```bash
-cd web
+cd ui
 VITE_API_BASE_URL=http://127.0.0.1:8000/api make dev
 ```
 
@@ -147,19 +147,19 @@ Set `PORT` to change the Vite port and the URL opened by `make dev`, for example
 
 | Command | Purpose |
 | --- | --- |
-| `make install` | Install API and web dependencies |
+| `make install` | Install API and UI dependencies |
 | `make setup-env` | Create `api/.env` from the template when absent |
-| `make dev` | Start API and web in separate macOS Terminal sessions; the web target opens the frontend URL |
-| `make dev-single` | Start both services in one terminal; the web target opens the frontend URL |
+| `make dev` | Start API and UI in separate macOS Terminal sessions; the UI target opens the UI URL |
+| `make dev-single` | Start both services in one terminal; the UI target opens the UI URL |
 | `make api-only` | Start only the API; no browser tab is opened |
-| `make web-only` | Start only the web client and open its configured frontend URL |
+| `make ui-only` | Start only the UI client and open its configured UI URL |
 | `make doctor` | Inspect Python, Node, npm, MongoDB, and environment status |
-| `make health` | Call the web Makefile health target, which checks the API |
-| `make status` | Show API and web status |
+| `make health` | Call the UI Makefile health target, which checks the API |
+| `make status` | Show API and UI status |
 | `make check` | Run Django checks |
 | `make test` | Run the API test suite |
-| `make build` | Build the Vite frontend |
-| `make ci` | Run checks, tests, and the frontend build |
+| `make build` | Build the Vite UI |
+| `make ci` | Run checks, tests, and the UI build |
 | `make clean-cache` | Remove generated caches |
 | `make clean` | Remove local dependencies and generated files; inspect the target before use |
 
@@ -185,9 +185,9 @@ make status
 
 The API Makefile uses `api/.venv/bin/python` after the virtual environment exists.
 
-### Web commands
+### UI commands
 
-Run from `web/`:
+Run from `ui/`:
 
 ```bash
 make install
@@ -200,7 +200,7 @@ make doctor
 make bundle-size
 ```
 
-The web package currently has `dev`, `build`, and `preview` npm scripts. It does not currently include a frontend unit-test or lint script.
+The UI package currently has `dev`, `build`, and `preview` npm scripts. It does not currently include a UI unit-test or lint script.
 
 ## MongoDB startup and history
 
@@ -230,12 +230,12 @@ Do not commit a model artifact until its provenance, license, feature version, t
 
 ## Troubleshooting
 
-### The web page cannot reach the API
+### The UI cannot reach the API
 
 1. Confirm the API is running at `http://127.0.0.1:8000`.
-2. Run `make health` or `make -C web test-api`.
+2. Run `make health` or `make -C ui test-api`.
 3. Check `VITE_API_BASE_URL` and ensure it ends with `/api`.
-4. Confirm the web origin is listed in `CORS_ALLOWED_ORIGINS`.
+4. Confirm the UI origin is listed in `CORS_ALLOWED_ORIGINS`.
 5. Restart Vite after changing a `VITE_` environment variable.
 
 ### The backend refuses to start because MongoDB is unavailable

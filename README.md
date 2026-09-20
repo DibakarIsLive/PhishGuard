@@ -39,7 +39,7 @@ The analyzer does **not** visit, crawl, resolve, or fetch submitted websites. It
 
 ```text
 ┌──────────────────────────────┐
-│ React + Vite + JSX (`web/`)  │
+│ React + Vite + JSX (`ui/`)  │
 │ Scan form · result · history │
 └──────────────┬───────────────┘
                │ JSON over HTTP
@@ -77,15 +77,15 @@ The scan computation is independent of webpage content and does not contact subm
 From the repository root:
 
 ```bash
-make install       # create the API environment and install API/web dependencies
+make install       # create the API environment and install API/UI dependencies
 make setup-env     # create api/.env when it does not exist
-make dev           # launch API and web in separate Terminal windows on macOS
+make dev           # launch API and UI in separate Terminal windows on macOS
 ```
 
 The services use these local addresses:
 
 - API: `http://127.0.0.1:8000`
-- Web: `http://localhost:5173`
+- UI: `http://localhost:5173`
 
 Useful commands:
 
@@ -95,10 +95,10 @@ make check         # run Django system checks
 make test          # run the API test suite
 make build         # create the Vite production build
 make ci            # check, test, and build
-make dev-single    # run API and web from one terminal
+make dev-single    # run API and UI from one terminal
 ```
 
-`make dev` uses macOS Terminal tabs/windows. The web development server automatically opens `http://localhost:5173/` in the default browser. On other platforms, use `make dev-single` or start the API and web manually; the web `make dev` target still opens its configured Vite URL.
+`make dev` uses macOS Terminal tabs/windows. The UI development server automatically opens `http://localhost:5173/` in the default browser. On other platforms, use `make dev-single` or start the API and UI manually; the UI `make dev` target still opens its configured Vite URL.
 
 ### Manual setup
 
@@ -115,15 +115,15 @@ python manage.py runserver 127.0.0.1:8000
 python manage.py runserver 127.0.0.1:8000 --force
 ```
 
-Web, in a second terminal:
+UI, in a second terminal:
 
 ```bash
-cd web
+cd ui
 npm install
 make dev  # starts Vite and opens http://localhost:5173/ automatically
 ```
 
-The web client defaults to `http://localhost:8000/api`. Set `VITE_API_BASE_URL` when the API is hosted elsewhere, for example:
+The UI client defaults to `http://localhost:8000/api`. Set `VITE_API_BASE_URL` when the API is hosted elsewhere, for example:
 
 ```bash
 VITE_API_BASE_URL=http://127.0.0.1:8000/api npm run dev
@@ -185,7 +185,7 @@ PhishGuard/
 │   ├── web_api/               REST serializers, views, and routes
 │   ├── manage.py
 │   └── requirements.txt
-├── web/
+├── ui/
 │   ├── src/components/        Scan, result, and history components
 │   ├── src/hooks/             React state hooks
 │   ├── src/services/          Fetch-based API client
@@ -210,7 +210,7 @@ make build
 python3 -m compileall -q api
 ```
 
-`git diff --check` is also recommended before committing. The API test suite currently covers stable feature ordering, representative feature flags, API-root details, verdict values, and confidence bounds. The web project currently provides a Vite production build rather than a separate frontend test suite.
+`git diff --check` is also recommended before committing. The API test suite currently covers stable feature ordering, representative feature flags, API-root details, verdict values, and confidence bounds. The UI project currently provides a Vite production build rather than a separate UI test suite.
 
 ## Limitations and safety boundary
 
