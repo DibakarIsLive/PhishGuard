@@ -216,3 +216,43 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# PhishGuard local runtime, datasets, and trained ML files
+backend/.venv/
+backend/db.sqlite3
+backend/data/uploads/
+backend/data/raw/
+backend/data/processed/
+backend/ml_models/
+phishing_site_urls.csv
+*.csv
+*.xlsx
+*.joblib
+*.pkl
+
+# React / Node build and dependency files
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+node_modules/
+dist/
+.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local secrets and editor settings
+.env
+.env.*
+!.env.example
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Generated ML training logs and TypeScript build artifacts
+backend/catboost_info/
+*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
